@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilingual News Aggregator</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f4f4f9; 
+            color: #333;
+        }
+        h1 { text-align: center; color: #2c3e50; }
+        .status { text-align: center; font-size: 0.85em; color: #666; margin-bottom: 30px; }
+        
+        .article { 
+            background: white; 
+            padding: 15px 20px; 
+            margin-bottom: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            transition: transform 0.2s;
+        }
+        .article:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        .translated-title { font-size: 1.25em; font-weight: bold; margin-bottom: 4px; }
+        .original-title { font-size: 1em; color: #555; margin-bottom: 12px; }
+        .meta { font-size: 0.85em; color: #888; display: flex; justify-content: space-between;}
+        
+        a { text-decoration: none; color: #2980b9; }
+        a:hover { text-decoration: underline; color: #1abc9c; }
+        #loading { text-align: center; color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <h1>Global News Feed</h1>
+    <div class="status">
+        Auto-refreshes every 30 minutes. Last updated: <span id="last-updated">--</span>
+    </div>
+
+    <div id="news-container">
+        <p id="loading">Fetching latest articles from Supabase...</p>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. SUPABASE CONFIGURATION
+        // ==========================================
+        // Find these in your Supabase Dashboard: Project Settings -> API
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        
+        // Initialize the Supabase Client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==========================================
+        // 2. FETCH AND RENDER DATA
+        // ==========================================
+        const container = document.getElementById('news-container');
+        const timeDisplay = document.getElementById('last-updated');
+
+        async function fetchNews() {
+            console.log("Fetching new articles...");
+            
+            // Replace 'articles' with your actual Supabase table name
+            const { data, error } = await supabase
+                .from('articles') 
+                .select('id, original_title, translated_title, url, source_name, created_at')
+                .order('created_at', { ascending: false })
+                .limit(50); // Gets the 50 most recent articles
+
+            if (error) {
+                console.error('Error fetching news:', error.message);
+                container.innerHTML = `<p style="color:red; text-align:center;">Failed to load news: ${error.message}</p>`;
+                return;
+            }
+
+            renderNews(data);
+        }
+
+        function renderNews(articles) {
+            if (!articles || articles.length === 0) {
+                container.innerHTML = '<p style="text-align:center;">No articles found in the database.</p>';
+                return;
+            }
+
+            container.innerHTML = ''; // Clear loading text
+
+            articles.forEach(article => {
+                const articleDiv = document.createElement('div');
+                articleDiv.className = 'article';
+
+                // Handle missing data gracefully
+                const translated = article.translated_title || 'Translation pending...';
+                const original = article.original_title || 'No title';
+                const source = article.source_name || 'Unknown Source';
+                const link = article.url || '#';
+                
+                // Format the timestamp nicely
+                const publishDate = new Date(article.created_at).toLocaleString([], {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                articleDiv.innerHTML = `
+                    <div class="translated-title">
+                        <a href="${link}" target="_blank" rel="noopener noreferrer">${translated}</a>
+                    </div>
+                    <div class="original-title">${original}</div>
+                    <div class="meta">
+                        <span>Source: <strong>${source}</strong></span>
+                        <span>${publishDate}</span>
+                    </div>
+                `;
+                container.appendChild(articleDiv);
+            });
+
+            // Update the "Last Updated" timestamp at the top of the page
+            timeDisplay.innerText = new Date().toLocaleTimeString();
+        }
+
+        // ==========================================
+        // 3. INITIALIZATION & AUTO-REFRESH TIMER
+        // ==========================================
+        
+        // Fetch immediately when the page loads
+        fetchNews(); 
+        
+        // Set up the 30-minute interval loop (30 minutes * 60 seconds * 1000 milliseconds)
+        const THIRTY_MINUTES = 30 * 60 * 1000;
+        setInterval(fetchNews, THIRTY_MINUTES);
+
+    </script>
+</body>
+</html>
