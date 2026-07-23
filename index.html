@@ -54,8 +54,8 @@
         // 1. SUPABASE CONFIGURATION
         // ==========================================
         // Find these in your Supabase Dashboard: Project Settings -> API
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const SUPABASE_URL = 'https://jwagtkzvhlidkbleraie.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3YWd0a3p2aGxpZGtibGVyYWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODI5MjAsImV4cCI6MjA5OTc1ODkyMH0.HrYbyhxtCSNN5x8ZgySBtvs7cMjh94IACmGnIRbDU5Q';
         
         // Initialize the Supabase Client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -71,10 +71,10 @@
             
             // Replace 'articles' with your actual Supabase table name
             const { data, error } = await supabase
-                .from('articles') 
+                .from('news_articles') 
                 .select('id, original_title, translated_title, url, source_name, created_at')
                 .order('created_at', { ascending: false })
-                .limit(50); // Gets the 50 most recent articles
+                .limit(500); // Gets the 500 most recent articles
 
             if (error) {
                 console.error('Error fetching news:', error.message);
