@@ -3,138 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bilingual News Aggregator</title>
+    <title>Bangladesh News Aggregator</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            max-width: 800px; 
-            margin: 0 auto; 
-            padding: 20px; 
-            background: #f4f4f9; 
-            color: #333;
+        /* CSS Variables for consistent theming */
+        :root {
+            --bg-color: #f3f4f6;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary-color: #2563eb;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        h1 { text-align: center; color: #2c3e50; }
-        .status { text-align: center; font-size: 0.85em; color: #666; margin-bottom: 30px; }
-        
-        .article { 
-            background: white; 
-            padding: 15px 20px; 
-            margin-bottom: 15px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-            transition: transform 0.2s;
+
+        /* Base Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
         }
-        .article:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        
-        .translated-title { font-size: 1.25em; font-weight: bold; margin-bottom: 4px; }
-        .original-title { font-size: 1em; color: #555; margin-bottom: 12px; }
-        .meta { font-size: 0.85em; color: #888; display: flex; justify-content: space-between;}
-        
-        a { text-decoration: none; color: #2980b9; }
-        a:hover { text-decoration: underline; color: #1abc9c; }
-        #loading { text-align: center; color: #666; font-style: italic; }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .status-bar {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* Grid Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem 1rem;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Card Design */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background-color: #e5e7eb; /* Fallback color */
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .tag {
+            background-color: #e0e7ff;
+            color: #4338ca;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0 0 0.75rem 0;
+            line-height: 1.3;
+        }
+
+        .card-title a {
+            color: var(--text-main);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .card-title a:hover {
+            color: var(--primary-color);
+        }
+
+        .card-summary {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin: 0 0 1.5rem 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* Limit to 3 lines */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid #f3f4f6;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .source-name {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .language-indicator {
+            background: #f3f4f6;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        #loading, #error-message {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 3rem;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Global News Feed</h1>
-    <div class="status">
-        Auto-refreshes every 30 minutes. Last updated: <span id="last-updated">--</span>
-    </div>
+    <header>
+        <h1>Latest News</h1>
+        <div class="status-bar">
+            Auto-refreshes every 30 mins • Last updated: <span id="last-updated">--</span>
+        </div>
+    </header>
 
-    <div id="news-container">
-        <p id="loading">Fetching latest articles from Supabase...</p>
+    <div class="container">
+        <div id="news-grid" class="news-grid">
+            <div id="loading">Fetching latest articles from Supabase...</div>
+        </div>
     </div>
 
     <script>
         // ==========================================
         // 1. SUPABASE CONFIGURATION
         // ==========================================
-        // Find these in your Supabase Dashboard: Project Settings -> API
-        const SUPABASE_URL = 'https://jwagtkzvhlidkbleraie.supabase.co';
+        const SUPABASE_URL = 'https://jwagtkzvhlidkbleraie.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3YWd0a3p2aGxpZGtibGVyYWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODI5MjAsImV4cCI6MjA5OTc1ODkyMH0.HrYbyhxtCSNN5x8ZgySBtvs7cMjh94IACmGnIRbDU5Q';
         
-        // Initialize the Supabase Client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ==========================================
-        // 2. FETCH AND RENDER DATA
-        // ==========================================
-        const container = document.getElementById('news-container');
+        // DOM Elements
+        const gridContainer = document.getElementById('news-grid');
         const timeDisplay = document.getElementById('last-updated');
 
+        // ==========================================
+        // 2. FETCH DATA FUNCTION
+        // ==========================================
         async function fetchNews() {
             console.log("Fetching new articles...");
             
-            // Replace 'articles' with your actual Supabase table name
+            // Adjust table name if necessary
             const { data, error } = await supabase
                 .from('news_articles') 
-                .select('id, original_title, translated_title, url, source_name, created_at')
-                .order('created_at', { ascending: false })
-                .limit(500); // Gets the 500 most recent articles
+                .select('title, summary, url, language, published_at, image_url, source_name, tags')
+                .order('published_at', { ascending: false })
+                .limit(100);
 
             if (error) {
                 console.error('Error fetching news:', error.message);
-                container.innerHTML = `<p style="color:red; text-align:center;">Failed to load news: ${error.message}</p>`;
+                gridContainer.innerHTML = `<div id="error-message">Failed to load news: ${error.message}</div>`;
                 return;
             }
 
             renderNews(data);
         }
 
+        // ==========================================
+        // 3. RENDER DATA FUNCTION
+        // ==========================================
         function renderNews(articles) {
             if (!articles || articles.length === 0) {
-                container.innerHTML = '<p style="text-align:center;">No articles found in the database.</p>';
+                gridContainer.innerHTML = '<div id="loading">No articles found in the database.</div>';
                 return;
             }
 
-            container.innerHTML = ''; // Clear loading text
+            gridContainer.innerHTML = ''; // Clear loading text
 
             articles.forEach(article => {
-                const articleDiv = document.createElement('div');
-                articleDiv.className = 'article';
+                const card = document.createElement('article');
+                card.className = 'card';
 
-                // Handle missing data gracefully
-                const translated = article.translated_title || 'Translation pending...';
-                const original = article.original_title || 'No title';
-                const source = article.source_name || 'Unknown Source';
-                const link = article.url || '#';
+                // Handle missing image with a clean fallback placeholder
+                const imageUrl = article.image_url || 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20800%20400%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23e5e7eb%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22200%22%20fill%3D%22%239ca3af%22%20font-family%3D%22sans-serif%22%20font-size%3D%2224%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ENo%20Image%20Available%3C%2Ftext%3E%3C%2Fsvg%3E';
                 
-                // Format the timestamp nicely
-                const publishDate = new Date(article.created_at).toLocaleString([], {
-                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                });
+                // Parse tags safely (handles both JSON Arrays and comma-separated strings)
+                let tagsHtml = '';
+                let tagsArray = [];
+                if (article.tags) {
+                    if (Array.isArray(article.tags)) {
+                        tagsArray = article.tags;
+                    } else if (typeof article.tags === 'string') {
+                        try {
+                            tagsArray = JSON.parse(article.tags); // Try parsing if stringified JSON
+                        } catch(e) {
+                            tagsArray = article.tags.split(',').map(t => t.trim()); // Fallback to comma split
+                        }
+                    }
+                    
+                    // Filter out source names from tags if they exist to avoid redundancy, then build HTML
+                    tagsArray
+                        .filter(tag => tag !== article.source_name) 
+                        .slice(0, 3) // Only show up to 3 tags to keep design clean
+                        .forEach(tag => {
+                            tagsHtml += `<span class="tag">${tag}</span>`;
+                        });
+                }
 
-                articleDiv.innerHTML = `
-                    <div class="translated-title">
-                        <a href="${link}" target="_blank" rel="noopener noreferrer">${translated}</a>
-                    </div>
-                    <div class="original-title">${original}</div>
-                    <div class="meta">
-                        <span>Source: <strong>${source}</strong></span>
-                        <span>${publishDate}</span>
+                // Format the Date specifically to Dhaka Time (UTC+6)
+                let formattedTime = 'Unknown date';
+                if (article.published_at) {
+                    const dateObj = new Date(article.published_at); // JS Date handles UTC automatically
+                    formattedTime = dateObj.toLocaleString("en-US", {
+                        timeZone: "Asia/Dhaka", // Forces UTC+6
+                        month: 'short', 
+                        day: 'numeric', 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                }
+
+                // Construct Card HTML
+                card.innerHTML = `
+                    <img class="card-image" src="${imageUrl}" alt="Article Image" loading="lazy">
+                    <div class="card-content">
+                        ${tagsHtml ? `<div class="tags-container">${tagsHtml}</div>` : ''}
+                        
+                        <h2 class="card-title">
+                            <a href="${article.url}" target="_blank" rel="noopener noreferrer">
+                                ${article.title || 'Untitled Article'}
+                            </a>
+                        </h2>
+                        
+                        <p class="card-summary">
+                            ${article.summary || 'No summary available for this article.'}
+                        </p>
+                        
+                        <div class="card-footer">
+                            <div class="source-name">
+                                <strong>${article.source_name || 'Unknown Source'}</strong>
+                                ${article.language ? `<span class="language-indicator">${article.language}</span>` : ''}
+                            </div>
+                            <div class="publish-time">${formattedTime}</div>
+                        </div>
                     </div>
                 `;
-                container.appendChild(articleDiv);
+                
+                gridContainer.appendChild(card);
             });
 
-            // Update the "Last Updated" timestamp at the top of the page
-            timeDisplay.innerText = new Date().toLocaleTimeString();
+            // Update the "Last Updated" timestamp
+            timeDisplay.innerText = new Date().toLocaleTimeString("en-US", { timeZone: "Asia/Dhaka" });
         }
 
         // ==========================================
-        // 3. INITIALIZATION & AUTO-REFRESH TIMER
+        // 4. INITIALIZATION & AUTO-REFRESH TIMER
         // ==========================================
         
-        // Fetch immediately when the page loads
-        fetchNews(); 
+        fetchNews(); // Initial load
         
-        // Set up the 30-minute interval loop (30 minutes * 60 seconds * 1000 milliseconds)
-        const THIRTY_MINUTES = 30 * 60 * 1000;
-        setInterval(fetchNews, THIRTY_MINUTES);
+        // Refresh every 30 minutes (30 mins * 60 secs * 1000 ms)
+        setInterval(fetchNews, 30 * 60 * 1000);
 
     </script>
 </body>
