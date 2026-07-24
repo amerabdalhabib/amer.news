@@ -3,137 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bangladesh News Aggregator</title>
+    <title>Amer.News | Real-Time News Aggregator</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
-        /* CSS Variables for consistent theming */
+        /* ==========================================
+           CSS VARIABLES (LIGHT & DARK MODE)
+           ========================================== */
         :root {
-            --bg-color: #f3f4f6;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --primary-color: #2563eb;
-            --card-bg: #ffffff;
-            --border-radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --primary-brand: #2563eb;
+            --primary-hover: #1d4ed8;
+            --tag-bg: #eff6ff;
+            --tag-text: #1e40af;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius-md: 8px;
+            --radius-lg: 12px;
         }
 
-        /* Base Styles */
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --primary-brand: #3b82f6;
+            --primary-hover: #60a5fa;
+            --tag-bg: #1e3a8a;
+            --tag-text: #bfdbfe;
+        }
+
+        /* ==========================================
+           BASE STYLES
+           ========================================== */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-main);
+            color: var(--text-primary);
             margin: 0;
             padding: 0;
             line-height: 1.5;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        header {
-            background-color: var(--card-bg);
-            padding: 2rem 1rem;
-            text-align: center;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
+        a { text-decoration: none; color: inherit; }
 
-        h1 {
-            margin: 0 0 0.5rem 0;
-            font-size: 2.25rem;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .status-bar {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-        }
-
-        /* Grid Layout */
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 0 1rem 2rem 1rem;
+            padding: 0 1.5rem;
         }
 
-        .news-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
+        /* ==========================================
+           HEADER & NAVIGATION
+           ========================================== */
+        header {
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 1rem 0;
+            transition: background-color 0.3s ease;
         }
 
-        /* Card Design */
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.025em;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            max-width: 400px;
+            position: relative;
+            display: none;
+        }
+
+        @media (min-width: 640px) { .search-bar { display: block; } }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            border-radius: 9999px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar input:focus { border-color: var(--primary-brand); }
+        .search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); width: 18px;}
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        .current-date-display {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        /* ==========================================
+           CONTROLS (FILTERS & DATE RANGE)
+           ========================================== */
+        .controls-section {
+            padding: 1.5rem 0;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .controls-section { flex-direction: row; justify-content: space-between; align-items: flex-start; }
+        }
+
+        .tags-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            flex-grow: 1;
+        }
+
+        .filter-btn {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover { border-color: var(--text-secondary); }
+        
+        .filter-btn.active {
+            background-color: var(--primary-brand);
+            color: white;
+            border-color: var(--primary-brand);
+        }
+
+        .date-filter select {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* ==========================================
+           NEWS GRID & CARDS
+           ========================================== */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding-bottom: 3rem;
+        }
+
+        .card {
+            background-color: var(--surface-color);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .card:hover {
             transform: translateY(-4px);
-            box-shadow: var(--shadow-hover);
+            box-shadow: var(--shadow-md);
         }
 
-        .card-image {
+        .card-img {
             width: 100%;
-            height: 200px;
+            height: 180px;
             object-fit: cover;
-            background-color: #e5e7eb; /* Fallback color */
+            background-color: var(--border-color);
         }
 
-        .card-content {
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
-
-        .tags-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .tag {
-            background-color: #e0e7ff;
-            color: #4338ca;
-            font-size: 0.75rem;
+        .card-content { padding: 1.25rem; display: flex; flex-direction: column; flex-grow: 1; }
+        
+        .card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+        .tag-pill {
+            background-color: var(--tag-bg);
+            color: var(--tag-text);
+            font-size: 0.7rem;
             font-weight: 600;
-            padding: 0.25rem 0.6rem;
-            border-radius: 9999px;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.025em;
         }
 
         .card-title {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            margin: 0 0 0.75rem 0;
+            margin: 0 0 0.5rem 0;
             line-height: 1.3;
         }
 
-        .card-title a {
-            color: var(--text-main);
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-        .card-title a:hover {
-            color: var(--primary-color);
-        }
+        .card-title a:hover { color: var(--primary-brand); }
 
         .card-summary {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            margin: 0 0 1.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0 0 1.25rem 0;
             display: -webkit-box;
-            -webkit-line-clamp: 3; /* Limit to 3 lines */
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
             flex-grow: 1;
@@ -145,185 +270,310 @@
             align-items: center;
             margin-top: auto;
             padding-top: 1rem;
-            border-top: 1px solid #f3f4f6;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 500;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
 
-        .source-name {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .language-indicator {
-            background: #f3f4f6;
-            padding: 0.1rem 0.4rem;
-            border-radius: 4px;
-            font-size: 0.7rem;
-        }
-
-        #loading, #error-message, #crash-message {
+        /* ==========================================
+           FOOTER
+           ========================================== */
+        footer {
+            background-color: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
             text-align: center;
-            grid-column: 1 / -1;
-            padding: 3rem;
-            color: var(--text-muted);
-            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
         }
+        
+        footer a { color: var(--primary-brand); font-weight: 600; }
+        footer a:hover { text-decoration: underline; }
+
+        .system-msg { text-align: center; grid-column: 1 / -1; padding: 4rem 0; color: var(--text-secondary); }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Latest News</h1>
-        <div class="status-bar">
-            Auto-refreshes every 30 mins • Last updated: <span id="last-updated">--</span>
+        <div class="container header-content">
+            <a href="#" class="logo">
+                <i data-lucide="globe-2"></i> Amer.News
+            </a>
+
+            <div class="search-bar">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search articles...">
+            </div>
+
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" aria-label="Toggle Dark Mode">
+                    <i data-lucide="moon" id="themeIcon"></i>
+                </button>
+                <button class="icon-btn" aria-label="Account">
+                    <i data-lucide="user-circle"></i>
+                </button>
+            </div>
         </div>
+        <div class="current-date-display container" id="headerDate">--</div>
     </header>
 
-    <div class="container">
-        <div id="news-grid" class="news-grid">
-            <div id="loading">Fetching latest articles from Supabase...</div>
+    <main class="container">
+        
+        <div class="controls-section">
+            <div class="tags-filter" id="tagsContainer">
+                </div>
+            
+            <div class="date-filter">
+                <select id="dateDropdown">
+                    <option value="ALL">All Dates</option>
+                    </select>
+            </div>
         </div>
-    </div>
+
+        <div id="news-grid" class="news-grid">
+            <div class="system-msg">
+                <i data-lucide="loader-2" class="animate-spin" style="margin-bottom:10px;"></i><br>
+                Fetching latest articles...
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            &copy; <span id="year"></span> Amer.News. Aggregating the world's stories.<br>
+            <span style="display:inline-block; margin-top:8px;">
+                Curated by <a href="https://yourpersonalsite.com" target="_blank" rel="noopener">Amer Habib</a>
+            </span>
+        </div>
+    </footer>
 
     <script>
+        lucide.createIcons();
+        document.getElementById('year').textContent = new Date().getFullYear();
+        document.getElementById('headerDate').textContent = new Date().toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: "Asia/Dhaka" });
+
         // ==========================================
-        // 1. SUPABASE CONFIGURATION
+        // 1. SUPABASE SETUP & STATE
         // ==========================================
         const SUPABASE_URL = 'https://jwagtkzvhlidkbleraie.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3YWd0a3p2aGxpZGtibGVyYWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODI5MjAsImV4cCI6MjA5OTc1ODkyMH0.HrYbyhxtCSNN5x8ZgySBtvs7cMjh94IACmGnIRbDU5Q';
-        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let allArticles = []; // Stores the master list for fast client-side filtering
+        let activeTag = 'ALL';
+        let activeDate = 'ALL';
+        let activeSearch = '';
+
         // DOM Elements
-        const gridContainer = document.getElementById('news-grid');
-        const timeDisplay = document.getElementById('last-updated');
+        const grid = document.getElementById('news-grid');
+        const tagsContainer = document.getElementById('tagsContainer');
+        const dateDropdown = document.getElementById('dateDropdown');
+        const searchInput = document.getElementById('searchInput');
 
         // ==========================================
-        // 2. FETCH DATA FUNCTION
+        // 2. FETCH DATA & INITIALIZE UI
         // ==========================================
-        async function fetchNews() {
+        async function init() {
             try {
-                console.log("Initializing Supabase Client...");
-                
-                // Moved client creation inside the try-catch to catch initialization errors
-                if (!window.supabase) {
-                    throw new Error("Supabase library failed to load from CDN. An ad-blocker or antivirus might be blocking it.");
-                }
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-                console.log("Fetching new articles...");
-                
                 const { data, error } = await supabase
                     .from('news_articles') 
-                    .select('title, summary, url, language, published_at, image_url, source_name, tags')
+                    .select('*')
                     .order('published_at', { ascending: false })
-                    .limit(100);
+                    .limit(200);
 
-                if (error) {
-                    console.error('Supabase Query Error:', error.message);
-                    gridContainer.innerHTML = `<div id="error-message" style="color: red;"><strong>Database Error:</strong> ${error.message}</div>`;
+                if (error) throw error;
+                
+                allArticles = data || [];
+                
+                if(allArticles.length === 0){
+                    grid.innerHTML = '<div class="system-msg">No articles found in the database.</div>';
                     return;
                 }
 
-                console.log("Data fetched successfully. Rendering...");
-                renderNews(data);
+                buildFilters();
+                applyFilters(); // Renders the grid based on default state
 
             } catch (err) {
-                // If the code crashes fatally, it prints the reason here
-                console.error("Fatal Crash:", err);
-                gridContainer.innerHTML = `<div id="crash-message" style="color: red;"><strong>Fatal Error:</strong> ${err.message}</div>`;
+                grid.innerHTML = `<div class="system-msg" style="color:red;">Error loading news: ${err.message}</div>`;
+                console.error(err);
             }
         }
 
         // ==========================================
-        // 3. RENDER DATA FUNCTION
+        // 3. BUILD DYNAMIC FILTERS (TAGS & DATES)
         // ==========================================
-        function renderNews(articles) {
-            if (!articles || articles.length === 0) {
-                gridContainer.innerHTML = '<div id="loading">No articles found in the database. Ensure your table is named "news_articles" and has data.</div>';
+        function buildFilters() {
+            const uniqueTags = new Set();
+            const uniqueDates = new Set();
+
+            allArticles.forEach(article => {
+                // 1. Extract Tags
+                if (article.tags) {
+                    let parsedTags = [];
+                    try { parsedTags = typeof article.tags === 'string' ? JSON.parse(article.tags) : article.tags; } 
+                    catch(e) { parsedTags = article.tags.split(','); }
+                    
+                    parsedTags.forEach(tag => {
+                        const cleanTag = tag.trim();
+                        // Ignore the source name acting as a tag
+                        if (cleanTag && cleanTag !== article.source_name && cleanTag !== "Top News") {
+                            uniqueTags.add(cleanTag);
+                        }
+                    });
+                }
+
+                // 2. Extract Dates (Formatted to Dhaka Time Day)
+                if (article.published_at) {
+                    const dateObj = new Date(article.published_at);
+                    const dayString = dateObj.toLocaleDateString("en-US", { 
+                        timeZone: "Asia/Dhaka", month: 'short', day: 'numeric', year: 'numeric' 
+                    });
+                    uniqueDates.add(dayString);
+                }
+            });
+
+            // Build Tags HTML
+            tagsContainer.innerHTML = `<button class="filter-btn active" data-tag="ALL">All News</button>`;
+            Array.from(uniqueTags).sort().slice(0, 8).forEach(tag => { // Limit to 8 aesthetic tags
+                tagsContainer.innerHTML += `<button class="filter-btn" data-tag="${tag}">${tag}</button>`;
+            });
+
+            // Add Tag Event Listeners
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    activeTag = e.target.getAttribute('data-tag');
+                    applyFilters();
+                });
+            });
+
+            // Build Date Dropdown HTML
+            Array.from(uniqueDates).forEach(dateStr => {
+                const opt = document.createElement('option');
+                opt.value = dateStr;
+                opt.textContent = dateStr;
+                dateDropdown.appendChild(opt);
+            });
+
+            // Add Date Event Listener
+            dateDropdown.addEventListener('change', (e) => {
+                activeDate = e.target.value;
+                applyFilters();
+            });
+        }
+
+        // ==========================================
+        // 4. FILTERING & RENDERING LOGIC
+        // ==========================================
+        searchInput.addEventListener('input', (e) => {
+            activeSearch = e.target.value.toLowerCase();
+            applyFilters();
+        });
+
+        function applyFilters() {
+            const filtered = allArticles.filter(article => {
+                // Check Tag
+                let matchesTag = activeTag === 'ALL';
+                if (!matchesTag && article.tags) {
+                    const strTags = JSON.stringify(article.tags).toLowerCase();
+                    matchesTag = strTags.includes(activeTag.toLowerCase());
+                }
+
+                // Check Date
+                let matchesDate = activeDate === 'ALL';
+                if (!matchesDate && article.published_at) {
+                    const articleDate = new Date(article.published_at).toLocaleDateString("en-US", { timeZone: "Asia/Dhaka", month: 'short', day: 'numeric', year: 'numeric' });
+                    matchesDate = articleDate === activeDate;
+                }
+
+                // Check Search
+                let matchesSearch = activeSearch === '';
+                if (!matchesSearch) {
+                    const title = (article.title || '').toLowerCase();
+                    const summary = (article.summary || '').toLowerCase();
+                    matchesSearch = title.includes(activeSearch) || summary.includes(activeSearch);
+                }
+
+                return matchesTag && matchesDate && matchesSearch;
+            });
+
+            renderGrid(filtered);
+        }
+
+        function renderGrid(articles) {
+            grid.innerHTML = '';
+            
+            if (articles.length === 0) {
+                grid.innerHTML = '<div class="system-msg">No articles match your criteria.</div>';
                 return;
             }
-
-            gridContainer.innerHTML = ''; // Clear loading text
 
             articles.forEach(article => {
                 const card = document.createElement('article');
                 card.className = 'card';
 
-                const imageUrl = article.image_url || 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20800%20400%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23e5e7eb%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22200%22%20fill%3D%22%239ca3af%22%20font-family%3D%22sans-serif%22%20font-size%3D%2224%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ENo%20Image%20Available%3C%2Ftext%3E%3C%2Fsvg%3E';
-                
-                let tagsHtml = '';
-                let tagsArray = [];
-                if (article.tags) {
-                    if (Array.isArray(article.tags)) {
-                        tagsArray = article.tags;
-                    } else if (typeof article.tags === 'string') {
-                        try {
-                            tagsArray = JSON.parse(article.tags);
-                        } catch(e) {
-                            tagsArray = article.tags.split(',').map(t => t.trim());
-                        }
-                    }
-                    
-                    tagsArray
-                        .filter(tag => tag !== article.source_name) 
-                        .slice(0, 3)
-                        .forEach(tag => {
-                            tagsHtml += `<span class="tag">${tag}</span>`;
-                        });
-                }
+                const fallbackImg = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22%23e2e8f0%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%2F%3E%3C%2Fsvg%3E';
+                const img = article.image_url || fallbackImg;
 
-                let formattedTime = 'Unknown date';
+                let timeStr = 'Unknown';
                 if (article.published_at) {
-                    const dateObj = new Date(article.published_at);
-                    formattedTime = dateObj.toLocaleString("en-US", {
-                        timeZone: "Asia/Dhaka", 
-                        month: 'short', 
-                        day: 'numeric', 
-                        hour: 'numeric', 
-                        minute: '2-digit',
-                        hour12: true
+                    timeStr = new Date(article.published_at).toLocaleTimeString("en-US", {
+                        timeZone: "Asia/Dhaka", hour: 'numeric', minute: '2-digit', hour12: true
                     });
                 }
 
                 card.innerHTML = `
-                    <img class="card-image" src="${imageUrl}" alt="Article Image" loading="lazy">
+                    <img class="card-img" src="${img}" alt="News Image" loading="lazy">
                     <div class="card-content">
-                        ${tagsHtml ? `<div class="tags-container">${tagsHtml}</div>` : ''}
-                        
+                        <div class="card-tags">
+                            <span class="tag-pill">${article.source_name || 'News'}</span>
+                        </div>
                         <h2 class="card-title">
-                            <a href="${article.url}" target="_blank" rel="noopener noreferrer">
-                                ${article.title || 'Untitled Article'}
-                            </a>
+                            <a href="${article.url}" target="_blank" rel="noopener">${article.title || 'Untitled'}</a>
                         </h2>
-                        
-                        <p class="card-summary">
-                            ${article.summary || 'No summary available for this article.'}
-                        </p>
-                        
+                        <p class="card-summary">${article.summary || ''}</p>
                         <div class="card-footer">
-                            <div class="source-name">
-                                <strong>${article.source_name || 'Unknown Source'}</strong>
-                                ${article.language ? `<span class="language-indicator">${article.language}</span>` : ''}
-                            </div>
-                            <div class="publish-time">${formattedTime}</div>
+                            <span>${article.language || 'English'}</span>
+                            <span>${timeStr}</span>
                         </div>
                     </div>
                 `;
-                
-                gridContainer.appendChild(card);
+                grid.appendChild(card);
             });
-
-            timeDisplay.innerText = new Date().toLocaleTimeString("en-US", { timeZone: "Asia/Dhaka" });
         }
 
         // ==========================================
-        // 4. INITIALIZATION & AUTO-REFRESH TIMER
+        // 5. DARK MODE TOGGLE
         // ==========================================
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
         
-        fetchNews(); 
-        setInterval(fetchNews, 30 * 60 * 1000);
+        // Check saved preference
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            themeIcon.setAttribute('data-lucide', 'sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (document.body.getAttribute('data-theme') === 'dark') {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeIcon.setAttribute('data-lucide', 'moon');
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeIcon.setAttribute('data-lucide', 'sun');
+            }
+            lucide.createIcons(); // Refresh icon
+        });
+
+        // Start App
+        init();
+        
+        // Auto-refresh data silently every 30 mins
+        setInterval(init, 30 * 60 * 1000); 
 
     </script>
 </body>
