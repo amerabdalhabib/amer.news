@@ -10,9 +10,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        /* ==========================================
-           CSS VARIABLES (LIGHT & DARK MODE)
-           ========================================== */
         :root {
             --bg-color: #f8fafc;
             --surface-color: #ffffff;
@@ -41,9 +38,6 @@
             --tag-text: #bfdbfe;
         }
 
-        /* ==========================================
-           BASE STYLES
-           ========================================== */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
@@ -62,9 +56,6 @@
             padding: 0 1.5rem;
         }
 
-        /* ==========================================
-           HEADER & NAVIGATION
-           ========================================== */
         header {
             background-color: var(--surface-color);
             border-bottom: 1px solid var(--border-color);
@@ -72,7 +63,6 @@
             top: 0;
             z-index: 50;
             padding: 1rem 0;
-            transition: background-color 0.3s ease;
         }
 
         .header-content {
@@ -147,9 +137,6 @@
             font-weight: 500;
         }
 
-        /* ==========================================
-           CONTROLS (FILTERS & DATE RANGE)
-           ========================================== */
         .controls-section {
             padding: 1.5rem 0;
             display: flex;
@@ -199,9 +186,6 @@
             cursor: pointer;
         }
 
-        /* ==========================================
-           NEWS GRID & CARDS
-           ========================================== */
         .news-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -275,9 +259,6 @@
             color: var(--text-secondary);
         }
 
-        /* ==========================================
-           FOOTER
-           ========================================== */
         footer {
             background-color: var(--surface-color);
             border-top: 1px solid var(--border-color);
@@ -321,21 +302,16 @@
     <main class="container">
         
         <div class="controls-section">
-            <div class="tags-filter" id="tagsContainer">
-                </div>
-            
+            <div class="tags-filter" id="tagsContainer"></div>
             <div class="date-filter">
                 <select id="dateDropdown">
                     <option value="ALL">All Dates</option>
-                    </select>
+                </select>
             </div>
         </div>
 
         <div id="news-grid" class="news-grid">
-            <div class="system-msg">
-                <i data-lucide="loader-2" class="animate-spin" style="margin-bottom:10px;"></i><br>
-                Fetching latest articles...
-            </div>
+            <div class="system-msg">Fetching latest articles...</div>
         </div>
     </main>
 
@@ -343,40 +319,34 @@
         <div class="container">
             &copy; <span id="year"></span> Amer.News. Aggregating the world's stories.<br>
             <span style="display:inline-block; margin-top:8px;">
-                Curated by <a href="https://yourpersonalsite.com" target="_blank" rel="noopener">Amer Habib</a>
+                Curated by <a href="https://amerhabib.com" target="_blank" rel="noopener">Amer Habib</a>
             </span>
         </div>
     </footer>
 
     <script>
-        lucide.createIcons();
         document.getElementById('year').textContent = new Date().getFullYear();
         document.getElementById('headerDate').textContent = new Date().toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: "Asia/Dhaka" });
 
-        // ==========================================
-        // 1. SUPABASE SETUP & STATE
-        // ==========================================
+        // Unique initialization variables to prevent double declaration errors
         const SUPABASE_URL = 'https://jwagtkzvhlidkbleraie.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3YWd0a3p2aGxpZGtibGVyYWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODI5MjAsImV4cCI6MjA5OTc1ODkyMH0.HrYbyhxtCSNN5x8ZgySBtvs7cMjh94IACmGnIRbDU5Q';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let allArticles = []; // Stores the master list for fast client-side filtering
+        let allArticles = [];
         let activeTag = 'ALL';
         let activeDate = 'ALL';
         let activeSearch = '';
 
-        // DOM Elements
         const grid = document.getElementById('news-grid');
         const tagsContainer = document.getElementById('tagsContainer');
         const dateDropdown = document.getElementById('dateDropdown');
         const searchInput = document.getElementById('searchInput');
 
-        // ==========================================
-        // 2. FETCH DATA & INITIALIZE UI
-        // ==========================================
         async function init() {
             try {
-                const { data, error } = await supabase
+                console.log("Fetching from Supabase...");
+                const { data, error } = await supabaseClient
                     .from('news_articles') 
                     .select('*')
                     .order('published_at', { ascending: false })
@@ -385,6 +355,7 @@
                 if (error) throw error;
                 
                 allArticles = data || [];
+                console.log("Fetched articles count:", allArticles.length);
                 
                 if(allArticles.length === 0){
                     grid.innerHTML = '<div class="system-msg">No articles found in the database.</div>';
@@ -392,54 +363,53 @@
                 }
 
                 buildFilters();
-                applyFilters(); // Renders the grid based on default state
+                applyFilters();
 
             } catch (err) {
+                console.error("Error loading news:", err);
                 grid.innerHTML = `<div class="system-msg" style="color:red;">Error loading news: ${err.message}</div>`;
-                console.error(err);
             }
         }
 
-        // ==========================================
-        // 3. BUILD DYNAMIC FILTERS (TAGS & DATES)
-        // ==========================================
         function buildFilters() {
             const uniqueTags = new Set();
             const uniqueDates = new Set();
 
             allArticles.forEach(article => {
-                // 1. Extract Tags
                 if (article.tags) {
                     let parsedTags = [];
-                    try { parsedTags = typeof article.tags === 'string' ? JSON.parse(article.tags) : article.tags; } 
-                    catch(e) { parsedTags = article.tags.split(','); }
+                    try { 
+                        parsedTags = typeof article.tags === 'string' ? JSON.parse(article.tags) : article.tags; 
+                    } catch(e) { 
+                        if (typeof article.tags === 'string') parsedTags = article.tags.split(','); 
+                    }
                     
-                    parsedTags.forEach(tag => {
-                        const cleanTag = tag.trim();
-                        // Ignore the source name acting as a tag
-                        if (cleanTag && cleanTag !== article.source_name && cleanTag !== "Top News") {
-                            uniqueTags.add(cleanTag);
-                        }
-                    });
+                    if (Array.isArray(parsedTags)) {
+                        parsedTags.forEach(tag => {
+                            const cleanTag = String(tag).trim();
+                            if (cleanTag && cleanTag !== article.source_name && cleanTag !== "Top News") {
+                                uniqueTags.add(cleanTag);
+                            }
+                        });
+                    }
                 }
 
-                // 2. Extract Dates (Formatted to Dhaka Time Day)
                 if (article.published_at) {
-                    const dateObj = new Date(article.published_at);
-                    const dayString = dateObj.toLocaleDateString("en-US", { 
-                        timeZone: "Asia/Dhaka", month: 'short', day: 'numeric', year: 'numeric' 
-                    });
-                    uniqueDates.add(dayString);
+                    try {
+                        const dateObj = new Date(article.published_at);
+                        const dayString = dateObj.toLocaleDateString("en-US", { 
+                            timeZone: "Asia/Dhaka", month: 'short', day: 'numeric', year: 'numeric' 
+                        });
+                        if (dayString !== "Invalid Date") uniqueDates.add(dayString);
+                    } catch(e) {}
                 }
             });
 
-            // Build Tags HTML
             tagsContainer.innerHTML = `<button class="filter-btn active" data-tag="ALL">All News</button>`;
-            Array.from(uniqueTags).sort().slice(0, 8).forEach(tag => { // Limit to 8 aesthetic tags
+            Array.from(uniqueTags).sort().slice(0, 8).forEach(tag => {
                 tagsContainer.innerHTML += `<button class="filter-btn" data-tag="${tag}">${tag}</button>`;
             });
 
-            // Add Tag Event Listeners
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -449,24 +419,22 @@
                 });
             });
 
-            // Build Date Dropdown HTML
+            const currentSelectedDate = dateDropdown.value;
+            dateDropdown.innerHTML = `<option value="ALL">All Dates</option>`;
             Array.from(uniqueDates).forEach(dateStr => {
                 const opt = document.createElement('option');
                 opt.value = dateStr;
                 opt.textContent = dateStr;
                 dateDropdown.appendChild(opt);
             });
+            dateDropdown.value = currentSelectedDate;
 
-            // Add Date Event Listener
             dateDropdown.addEventListener('change', (e) => {
                 activeDate = e.target.value;
                 applyFilters();
             });
         }
 
-        // ==========================================
-        // 4. FILTERING & RENDERING LOGIC
-        // ==========================================
         searchInput.addEventListener('input', (e) => {
             activeSearch = e.target.value.toLowerCase();
             applyFilters();
@@ -474,21 +442,20 @@
 
         function applyFilters() {
             const filtered = allArticles.filter(article => {
-                // Check Tag
                 let matchesTag = activeTag === 'ALL';
                 if (!matchesTag && article.tags) {
                     const strTags = JSON.stringify(article.tags).toLowerCase();
                     matchesTag = strTags.includes(activeTag.toLowerCase());
                 }
 
-                // Check Date
                 let matchesDate = activeDate === 'ALL';
                 if (!matchesDate && article.published_at) {
-                    const articleDate = new Date(article.published_at).toLocaleDateString("en-US", { timeZone: "Asia/Dhaka", month: 'short', day: 'numeric', year: 'numeric' });
-                    matchesDate = articleDate === activeDate;
+                    try {
+                        const articleDate = new Date(article.published_at).toLocaleDateString("en-US", { timeZone: "Asia/Dhaka", month: 'short', day: 'numeric', year: 'numeric' });
+                        matchesDate = articleDate === activeDate;
+                    } catch(e) {}
                 }
 
-                // Check Search
                 let matchesSearch = activeSearch === '';
                 if (!matchesSearch) {
                     const title = (article.title || '').toLowerCase();
@@ -519,9 +486,11 @@
 
                 let timeStr = 'Unknown';
                 if (article.published_at) {
-                    timeStr = new Date(article.published_at).toLocaleTimeString("en-US", {
-                        timeZone: "Asia/Dhaka", hour: 'numeric', minute: '2-digit', hour12: true
-                    });
+                    try {
+                        timeStr = new Date(article.published_at).toLocaleTimeString("en-US", {
+                            timeZone: "Asia/Dhaka", hour: 'numeric', minute: '2-digit', hour12: true
+                        });
+                    } catch(e) {}
                 }
 
                 card.innerHTML = `
@@ -544,13 +513,9 @@
             });
         }
 
-        // ==========================================
-        // 5. DARK MODE TOGGLE
-        // ==========================================
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
         
-        // Check saved preference
         if (localStorage.getItem('theme') === 'dark') {
             document.body.setAttribute('data-theme', 'dark');
             themeIcon.setAttribute('data-lucide', 'sun');
@@ -566,15 +531,12 @@
                 localStorage.setItem('theme', 'dark');
                 themeIcon.setAttribute('data-lucide', 'sun');
             }
-            lucide.createIcons(); // Refresh icon
+            lucide.createIcons();
         });
 
-        // Start App
+        // Initialize App
         init();
-        
-        // Auto-refresh data silently every 30 mins
-        setInterval(init, 30 * 60 * 1000); 
-
+        setInterval(init, 30 * 60 * 1000);
     </script>
 </body>
 </html>
