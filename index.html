@@ -48,8 +48,8 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { -webkit-text-size-adjust: 100%; }
         body { font-family: var(--font-body); background: var(--paper); color: var(--ink); line-height: 1.5; }
-        body, .icon-btn, .capsule, .load-more, .modal-btn { transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
-        a { color: inherit; }
+        body, .icon-btn, .capsule, .load-more, .modal-btn, .floating-filter-btn { transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
+        a { color: inherit; text-decoration: none; }
         button { font-family: inherit; }
         :focus-visible { outline: 2px solid var(--wire); outline-offset: 2px; }
 
@@ -61,14 +61,12 @@
         header { padding: 4px 0; }
         .header-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 
-        .brand-zone { display: flex; align-items: center; gap: 10px; min-width: 0; }
-        .logo { width: 30px; height: 30px; border-radius: 3px; object-fit: cover; flex-shrink: 0; }
-        h1 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; }
-        .masthead-rule { display: none; }
-        @media (min-width: 768px) {
-            .masthead-rule { display: block; width: 1px; height: 20px; background: var(--line); margin: 0 2px; }
-            .masthead-tag { display: block; font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.08em; }
-        }
+        .brand-zone { display: flex; align-items: center; gap: 10px; min-width: 0; text-decoration: none; color: inherit; cursor: pointer; }
+        .logo { width: 30px; height: 30px; border-radius: 0%; object-fit: cover; flex-shrink: 0; }
+        .brand-text-wrap { display: flex; flex-direction: column; justify-content: center; line-height: 1.1; }
+        h1 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; }
+        
+        .masthead-tag { font-family: var(--font-mono); font-size: 0.6rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 1px; }
 
         .utility-zone { display: flex; align-items: center; gap: 2px; font-size: 0.8rem; font-weight: 500; color: var(--ink-muted); flex-shrink: 0; }
         .live-clock { display: none; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; margin-right: 8px; font-size: 0.75rem; }
@@ -138,15 +136,19 @@
         .capsule:hover { border-color: var(--wire); }
         .capsule.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
-        /* ---------- Grid systems ---------- */
+        /* ---------- Grid systems & Responsive Fixes ---------- */
         .layout-grid-1 { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }
-        .layout-grid-2, .layout-grid-3, .layout-grid-4 { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .layout-grid-2, .layout-grid-3, .layout-grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         @media (min-width: 480px) {
-            .layout-grid-2, .layout-grid-3, .layout-grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .layout-grid-2, .layout-grid-3, .layout-grid-4 { gap: 20px; }
+        }
+        @media (min-width: 768px) {
+            .layout-grid-3 { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+            .layout-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 20px; }
         }
         @media (min-width: 1024px) {
-            .layout-grid-3 { grid-template-columns: repeat(3, 1fr); gap: 24px; }
-            .layout-grid-4 { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+            .layout-grid-3 { grid-template-columns: repeat(3, 1fr); }
+            .layout-grid-4 { grid-template-columns: repeat(4, 1fr); }
         }
 
         .layout-list { display: flex; flex-direction: column; gap: 15px; max-width: 900px; margin: 0 auto; }
@@ -166,18 +168,22 @@
 
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
         .tags-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-        .tag { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; padding: 3px 9px; border-radius: 3px; cursor: pointer; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-muted); display: inline-block; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+        .tag { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; padding: 3px 8px; border-radius: 3px; cursor: pointer; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-muted); display: inline-block; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
         .tag:hover { border-color: var(--wire); color: var(--wire); }
 
-        .bookmark-btn { background: none; border: none; cursor: pointer; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius); padding: 0; flex-shrink: 0; }
-        .bookmark-btn:hover { background: var(--wire-soft); color: var(--wire); }
+        .card-actions-group { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        .bookmark-btn, .share-btn { background: none; border: none; cursor: pointer; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius); padding: 0; flex-shrink: 0; }
+        .bookmark-btn:hover, .share-btn:hover { background: var(--wire-soft); color: var(--wire); }
         .bookmark-btn.saved { color: var(--wire); }
 
-        .news-title { display: block; color: var(--ink); text-decoration: none; font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; line-height: 1.28; margin-bottom: 8px; }
+        .news-title { display: block; color: var(--ink); text-decoration: none; font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; line-height: 1.25; margin-bottom: 8px; }
+        @media (min-width: 768px) { .news-title { font-size: 1.15rem; } }
         .news-title:hover { color: var(--wire); }
 
-        .snippet { font-size: 0.85rem; color: var(--ink-muted); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; flex-grow: 1; }
-        .meta { color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.72rem; display: flex; align-items: center; gap: 10px; margin-top: auto; flex-wrap: wrap; }
+        .snippet { font-size: 0.8rem; color: var(--ink-muted); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; flex-grow: 1; }
+        @media (min-width: 768px) { .snippet { font-size: 0.85rem; } }
+
+        .meta { color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.7rem; display: flex; align-items: center; gap: 10px; margin-top: auto; flex-wrap: wrap; }
         .text-only-tags { display: none; gap: 6px; align-items: center; }
 
         .layout-list .news-card { flex-direction: row; gap: 20px; align-items: flex-start; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
@@ -187,18 +193,18 @@
             .layout-list .card-image-wrap { width: 100%; margin-bottom: 12px; }
         }
         .layout-list .news-content { flex-direction: row; justify-content: space-between; width: 100%; }
-        .layout-list .card-header .bookmark-btn { display: none; }
-        .layout-list .bookmark-wrap { display: block; flex-shrink: 0; margin-left: 15px; }
+        .layout-list .card-header .card-actions-group { display: none; }
+        .layout-list .bookmark-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 15px; }
 
         .layout-text .news-card { flex-direction: row; padding: 13px 0; border-bottom: 1px solid var(--line); align-items: flex-start; }
         .layout-text .card-image-wrap { display: none; }
         .layout-text .news-content { flex-direction: row; justify-content: space-between; width: 100%; }
         .layout-text .card-header { display: none; }
-        .layout-text .news-title { font-size: 1.02rem; font-weight: 700; display: block; margin: 0 0 4px 0; }
-        .layout-text .snippet { font-size: 0.85rem; margin: 0 0 6px 0; -webkit-line-clamp: 2; flex-grow: 0; }
-        .layout-text .meta { font-size: 0.72rem; margin-top: 0; }
+        .layout-text .news-title { font-size: 0.98rem; font-weight: 700; display: block; margin: 0 0 4px 0; }
+        .layout-text .snippet { font-size: 0.8rem; margin: 0 0 6px 0; -webkit-line-clamp: 2; flex-grow: 0; }
+        .layout-text .meta { font-size: 0.7rem; margin-top: 0; }
         .layout-text .text-only-tags { display: inline-flex; }
-        .layout-text .bookmark-wrap { display: block; flex-shrink: 0; margin-left: 15px; }
+        .layout-text .bookmark-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 15px; }
 
         /* ---------- Hero carousel ---------- */
         .hero-carousel { grid-column: 1 / -1; position: relative; height: clamp(260px, 55vw, 440px); border-radius: var(--radius); overflow: hidden; margin-bottom: 4px; background: var(--paper-raised); touch-action: pan-y; }
@@ -260,8 +266,11 @@
         footer { text-align: center; padding: 40px 0; margin-top: 30px; color: var(--ink-muted); font-size: 0.85rem; }
         footer a { color: var(--ink); text-decoration: underline; font-weight: 500; }
 
-        .back-to-top { position: fixed; bottom: 22px; right: 18px; background: var(--ink); color: var(--paper); width: 44px; height: 44px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; z-index: 50; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
-        .back-to-top:hover { background: var(--wire); }
+        /* ---------- Floating Quick Buttons Stack ---------- */
+        .floating-stack { position: fixed; bottom: 22px; right: 18px; display: flex; flex-direction: column; gap: 10px; z-index: 50; }
+        .floating-btn { background: var(--ink); color: var(--paper); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+        .floating-btn:hover { background: var(--wire); }
+        #back-to-top { display: none; }
 
         /* ---------- Login modal ---------- */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 16px; }
@@ -274,6 +283,10 @@
         .form-group input { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-raised); color: var(--ink); font-family: inherit; font-size: 0.95rem; }
         .modal-btn { width: 100%; padding: 11px; background: var(--ink); color: var(--paper); border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer; margin-top: 8px; }
         .modal-btn:hover { background: var(--wire); }
+        
+        /* Toast Notification Styling */
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--paper); padding: 8px 16px; border-radius: var(--radius); font-size: 0.85rem; font-family: var(--font-mono); opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 3000; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
@@ -281,12 +294,13 @@
         <div class="container" style="padding-top: 10px; padding-bottom: 0;">
             <header>
                 <div class="header-top">
-                    <div class="brand-zone">
+                    <a href="index.html" class="brand-zone" aria-label="Amer.News Home">
                         <img src="https://amerhabib.com/public/ah_icon.png" alt="Amer.News logo" class="logo">
-                        <h1>Amer.News</h1>
-                        <span class="masthead-rule"></span>
-                        <span class="masthead-tag">Wire desk</span>
-                    </div>
+                        <div class="brand-text-wrap">
+                            <h1>Amer.News</h1>
+                            <span class="masthead-tag">Wire desk</span>
+                        </div>
+                    </a>
 
                     <div class="utility-zone">
                         <div id="live-datetime" class="live-clock"></div>
@@ -384,9 +398,16 @@
         </footer>
     </div>
 
-    <button id="back-to-top" class="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Back to top" aria-label="Back to top">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-    </button>
+    <div class="floating-stack" id="floating-stack">
+        <button id="floating-filter-toggle" class="floating-btn" onclick="toggleFilterAccordion()" title="Customize feed" aria-label="Toggle customisation filter drawer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        </button>
+        <button id="back-to-top" class="floating-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Back to top" aria-label="Back to top">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+        </button>
+    </div>
+
+    <div id="toast" class="toast">Link copied to clipboard!</div>
 
     <div id="login-modal" class="modal-overlay">
         <div class="modal-content" onclick="event.stopPropagation()">
@@ -423,7 +444,7 @@
         let activeCategories = safeParse(localStorage.getItem('newsCategories'), ['All']);
         let activeSources = safeParse(localStorage.getItem('newsSources'), ['All']);
         let activeLanguages = safeParse(localStorage.getItem('newsLanguages'), ['All']);
-        let currentView = localStorage.getItem('newsView') || (window.innerWidth < 768 ? 'grid-1' : 'grid-4');
+        let currentView = localStorage.getItem('newsView') || (window.innerWidth < 768 ? 'grid-2' : 'grid-4');
         let searchDebounce = null;
 
         let carouselInterval;
@@ -460,6 +481,7 @@
         const svgMoon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
         const svgBookmarkEmpty = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>`;
         const svgBookmarkFilled = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>`;
+        const svgShare = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>`;
 
         function updateClock() {
             const now = new Date();
@@ -495,8 +517,24 @@
         });
 
         window.addEventListener('scroll', () => {
-            document.getElementById('back-to-top').style.display = window.scrollY > 400 ? 'flex' : 'none';
+            const scrolled = window.scrollY > 400;
+            document.getElementById('back-to-top').style.display = scrolled ? 'flex' : 'none';
         });
+
+        window.toggleFilterAccordion = function() {
+            const details = document.getElementById('filter-details');
+            details.open = !details.open;
+            if (details.open) {
+                details.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2200);
+        }
 
         function getRelativeTime(dateStr) {
             if (!dateStr) return '';
@@ -550,7 +588,6 @@
             if (btn) applyView(btn.dataset.view);
         });
 
-        // Initialize available filter options from already fetched global data
         function setupFilters() {
             const tagContainer = document.getElementById('filter-container');
             const tagsSet = new Set();
@@ -629,7 +666,6 @@
         });
         document.getElementById('sort-box').addEventListener('change', applyFiltersAndSort);
 
-        // Fetch direct from Supabase matching selected sources and filters
         async function fetchArticlesFromSupabase() {
             renderSkeletons(8);
             try {
@@ -638,13 +674,10 @@
                     .select('*')
                     .order('published_at', { ascending: false });
 
-                // Apply source filtering directly at the database query level
                 if (!activeSources.includes('All')) {
-                    const sourceListStr = activeSources.map(s => `"${s}"`).join(',');
                     query = query.in('source_name', activeSources);
                 }
 
-                // Apply language filtering at database level
                 if (!activeLanguages.includes('All')) {
                     query = query.in('language', activeLanguages);
                 }
@@ -686,7 +719,6 @@
                 filteredData = filteredData.filter(item => bookmarks.includes(item.url));
             }
 
-            // Client-side topic/category filtering to correctly evaluate multi-select tags inside JSON/arrays
             if (!activeCategories.includes('All')) {
                 filteredData = filteredData.filter(item => {
                     const itemTags = parseTags(item);
@@ -748,6 +780,29 @@
             if (document.getElementById('sort-box').value === 'bookmarks') applyFiltersAndSort();
         }
 
+        window.handleShare = async function(title, url) {
+            const shareData = { title: title, url: url };
+            if (navigator.share && (window.innerWidth < 1024)) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        fallbackCopyUrl(url);
+                    }
+                }
+            } else {
+                fallbackCopyUrl(url);
+            }
+        }
+
+        function fallbackCopyUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Link copied to clipboard!");
+            }).catch(() => {
+                prompt("Copy link:", url);
+            });
+        }
+
         function cssEscape(str) {
             return window.CSS && CSS.escape ? CSS.escape(str) : str.replace(/["\\]/g, '\\$&');
         }
@@ -757,6 +812,12 @@
             if (bookmarkBtn) {
                 e.preventDefault();
                 toggleBookmark(bookmarkBtn.dataset.url);
+                return;
+            }
+            const shareBtn = e.target.closest('.share-btn');
+            if (shareBtn) {
+                e.preventDefault();
+                handleShare(shareBtn.dataset.title, shareBtn.dataset.url);
                 return;
             }
             const tagBadge = e.target.closest('.tag[data-tag]');
@@ -778,13 +839,18 @@
                 const snippet = item.summary || '';
                 const sourceTag = item.source_name || 'News';
                 const topicTags = parseTags(item).filter(t => t !== sourceTag && t !== 'Top News');
-                const primaryTopic = topicTags[0] || '';
                 const url = escapeHtml(item.url);
+                const titleStr = escapeHtml(item.title);
+
+                const allTagsHtml = [
+                    `<span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>`,
+                    ...topicTags.map(t => `<span class="tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`)
+                ].join('');
 
                 return `
                     <div class="carousel-slide ${index === 0 ? 'active' : ''}" id="slide-${index}">
                         <span class="wire-stamp">Top story</span>
-                        <a href="${url}" target="_blank" rel="noopener" data-url="${url}" class="hero-full-link" aria-label="${escapeHtml(item.title)}"></a>
+                        <a href="${url}" target="_blank" rel="noopener" data-url="${url}" class="hero-full-link" aria-label="${titleStr}"></a>
                         <div class="card-image-wrap">
                             ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" class="news-image" alt="">` : ''}
                             <div class="hero-overlay"></div>
@@ -793,17 +859,21 @@
                         <div class="news-content">
                             <div class="content-main">
                                 <div class="tags-group">
-                                    <span class="tag" onclick="filterByTag('${escapeHtml(sourceTag)}')" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>
-                                    ${primaryTopic ? `<span class="tag" onclick="filterByTag('${escapeHtml(primaryTopic)}')" data-tag="${escapeHtml(primaryTopic)}">${escapeHtml(primaryTopic)}</span>` : ''}
+                                    ${allTagsHtml}
                                 </div>
-                                <a class="news-title" href="${url}" target="_blank" rel="noopener" data-url="${url}">${escapeHtml(item.title)}</a>
+                                <a class="news-title" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
                                 ${snippet ? `<div class="snippet">${escapeHtml(snippet)}</div>` : ''}
                             </div>
 
                             <div class="bookmark-wrap">
-                                <button class="bookmark-btn ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
-                                    ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
-                                </button>
+                                <div style="display:flex; gap:4px;">
+                                    <button class="bookmark-btn ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
+                                        ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
+                                    </button>
+                                    <button class="share-btn" data-url="${url}" data-title="${titleStr}" title="Share" aria-label="Share article">
+                                        ${svgShare}
+                                    </button>
+                                </div>
                                 <div class="meta"><span>${getRelativeTime(item.published_at)}</span></div>
                             </div>
                         </div>
@@ -921,12 +991,17 @@
             const snippet = item.summary || '';
             const sourceTag = item.source_name || 'News';
             const topicTags = parseTags(item).filter(t => t !== sourceTag && t !== 'Top News');
-            const primaryTopic = topicTags[0] || '';
             const url = escapeHtml(item.url);
+            const titleStr = escapeHtml(item.title);
 
             const imageHtml = item.image_url
                 ? `<a href="${url}" target="_blank" rel="noopener" data-url="${url}" class="card-image-wrap"><img src="${escapeHtml(item.image_url)}" alt="" class="news-image" loading="lazy"></a>`
                 : `<div class="card-image-wrap"><span class="no-image-placeholder">No image</span></div>`;
+
+            const allTagsHtml = [
+                `<span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>`,
+                ...topicTags.map(t => `<span class="tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`)
+            ].join('');
 
             return `
                 <div id="${cardId}" class="news-card ${isRead ? 'read' : ''}">
@@ -935,26 +1010,32 @@
                         <div class="content-main">
                             <div class="card-header">
                                 <div class="tags-group">
-                                    <span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>
-                                    ${primaryTopic ? `<span class="tag" data-tag="${escapeHtml(primaryTopic)}">${escapeHtml(primaryTopic)}</span>` : ''}
+                                    ${allTagsHtml}
                                 </div>
-                                <button class="bookmark-btn grid-bookmark ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
-                                    ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
-                                </button>
+                                <div class="card-actions-group">
+                                    <button class="bookmark-btn ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
+                                        ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
+                                    </button>
+                                    <button class="share-btn" data-url="${url}" data-title="${titleStr}" title="Share" aria-label="Share article">
+                                        ${svgShare}
+                                    </button>
+                                </div>
                             </div>
-                            <a class="news-title" href="${url}" target="_blank" rel="noopener" data-url="${url}">${escapeHtml(item.title)}</a>
+                            <a class="news-title" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
                             ${snippet ? `<div class="snippet">${escapeHtml(snippet)}</div>` : ''}
                             <div class="meta">
                                 <span>${getRelativeTime(item.published_at)}</span>
                                 <div class="text-only-tags">
-                                    <span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>
-                                    ${primaryTopic ? `<span class="tag" data-tag="${escapeHtml(primaryTopic)}">${escapeHtml(primaryTopic)}</span>` : ''}
+                                    ${allTagsHtml}
                                 </div>
                             </div>
                         </div>
                         <div class="bookmark-wrap">
                             <button class="bookmark-btn ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
                                 ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
+                            </button>
+                            <button class="share-btn" data-url="${url}" data-title="${titleStr}" title="Share" aria-label="Share article">
+                                ${svgShare}
                             </button>
                         </div>
                     </div>
@@ -1022,7 +1103,6 @@
 
             let itemsToRender = filteredData.slice(0, currentDisplayed);
 
-            // Keep grid layouts balanced with even counts
             if (currentView.includes('grid') && itemsToRender.length % 2 !== 0 && itemsToRender.length > 1) {
                 itemsToRender = itemsToRender.slice(0, itemsToRender.length - 1);
             }
