@@ -19,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 
     <script>
-        const savedTheme = localStorage.getItem('theme') || 'light';
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
     <style>
@@ -87,7 +87,7 @@
         .ticker-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--wire); animation: pulse 1.6s ease-in-out infinite; flex-shrink: 0; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
         .ticker-viewport { overflow: hidden; flex: 1; mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent); }
-        .ticker-track { display: flex; width: max-content; gap: 40px; font-family: var(--font-mono); font-size: 0.78rem; white-space: nowrap; animation: ticker-scroll 45s linear infinite; }
+        .ticker-track { display: flex; width: max-content; gap: 40px; font-family: var(--font-mono); font-size: 0.78rem; white-space: nowrap; animation: ticker-scroll 49.6s linear infinite; }
         .ticker-track:hover, .ticker-track.paused { animation-play-state: paused; }
         .ticker-track a { text-decoration: none; color: var(--ink-muted); }
         .ticker-track a:hover { color: var(--ink); }
@@ -98,14 +98,29 @@
 
         /* ---------- Controls ---------- */
         .controls-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; margin: 16px 0; font-size: 0.85rem; }
-        .select-box { background: var(--paper-raised); border: 1px solid var(--line); outline: none; padding: 8px 10px; color: var(--ink); border-radius: var(--radius); cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.82rem; }
+        .select-box { background: var(--paper-raised); border: 1px solid var(--line); outline: none; padding: 8px 24px 8px 10px; color: var(--ink); border-radius: var(--radius); cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.82rem; }
 
         .layout-segmented { position: relative; display: flex; align-items: center; background: var(--paper-raised); border: 1px solid var(--line); padding: 3px; border-radius: var(--radius); }
         .seg-slider { position: absolute; top: 3px; left: 0; height: calc(100% - 6px); background: var(--wire); border-radius: calc(var(--radius) - 2px); transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1; }
         .seg-btn { position: relative; z-index: 2; background: none; border: none; outline: none; padding: 8px 12px; cursor: pointer; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; min-width: 40px; min-height: 36px; }
         .seg-btn.active { color: #fff; }
         .seg-btn svg { width: 17px; height: 17px; }
-        @media (max-width: 767px) { .desktop-only { display: none !important; } }
+
+        /* Device specific view toggles */
+        .seg-btn[data-view="grid-1"] { display: flex; }
+        .seg-btn[data-view="grid-2"] { display: flex; }
+        .seg-btn[data-view="grid-3"] { display: none; }
+        .seg-btn[data-view="grid-4"] { display: none; }
+        .seg-btn[data-view="list"] { display: none; }
+        .seg-btn[data-view="text"] { display: flex; }
+
+        @media (min-width: 768px) {
+            .seg-btn[data-view="grid-3"] { display: flex; }
+            .seg-btn[data-view="list"] { display: flex; }
+        }
+        @media (min-width: 1024px) {
+            .seg-btn[data-view="grid-4"] { display: flex; }
+        }
 
         /* ---------- Filters ---------- */
         .filter-accordion { border: none; margin-bottom: 18px; font-size: 0.85rem; }
@@ -124,6 +139,7 @@
         .capsule.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
         /* ---------- Grid systems ---------- */
+        .layout-grid-1 { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }
         .layout-grid-2, .layout-grid-3, .layout-grid-4 { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 480px) {
             .layout-grid-2, .layout-grid-3, .layout-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -133,8 +149,8 @@
             .layout-grid-4 { grid-template-columns: repeat(4, 1fr); gap: 20px; }
         }
 
-        .layout-list { display: flex; flex-direction: column; gap: 15px; }
-        .layout-text { display: flex; flex-direction: column; gap: 0; }
+        .layout-list { display: flex; flex-direction: column; gap: 15px; max-width: 900px; margin: 0 auto; }
+        .layout-text { display: flex; flex-direction: column; gap: 0; max-width: 900px; margin: 0 auto; }
 
         /* ---------- Card ---------- */
         .news-card { display: flex; flex-direction: column; padding: 0; }
@@ -148,8 +164,10 @@
         .content-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .bookmark-wrap { display: none; }
 
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
+        .tags-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .tag { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; padding: 3px 9px; border-radius: 3px; cursor: pointer; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-muted); display: inline-block; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+        .tag:hover { border-color: var(--wire); color: var(--wire); }
 
         .bookmark-btn { background: none; border: none; cursor: pointer; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius); padding: 0; flex-shrink: 0; }
         .bookmark-btn:hover { background: var(--wire-soft); color: var(--wire); }
@@ -159,8 +177,8 @@
         .news-title:hover { color: var(--wire); }
 
         .snippet { font-size: 0.85rem; color: var(--ink-muted); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; flex-grow: 1; }
-        .meta { color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.72rem; display: flex; align-items: center; gap: 10px; margin-top: auto; }
-        .text-only-tag { display: none; }
+        .meta { color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.72rem; display: flex; align-items: center; gap: 10px; margin-top: auto; flex-wrap: wrap; }
+        .text-only-tags { display: none; gap: 6px; align-items: center; }
 
         .layout-list .news-card { flex-direction: row; gap: 20px; align-items: flex-start; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
         .layout-list .card-image-wrap { width: 240px; aspect-ratio: 16/10; flex-shrink: 0; margin-bottom: 0; }
@@ -179,7 +197,7 @@
         .layout-text .news-title { font-size: 1.02rem; font-weight: 700; display: block; margin: 0 0 4px 0; }
         .layout-text .snippet { font-size: 0.85rem; margin: 0 0 6px 0; -webkit-line-clamp: 2; flex-grow: 0; }
         .layout-text .meta { font-size: 0.72rem; margin-top: 0; }
-        .layout-text .text-only-tag { display: inline-flex; }
+        .layout-text .text-only-tags { display: inline-flex; }
         .layout-text .bookmark-wrap { display: block; flex-shrink: 0; margin-left: 15px; }
 
         /* ---------- Hero carousel ---------- */
@@ -200,6 +218,9 @@
         .carousel-slide .snippet { color: #d4d4d8; font-size: 0.9rem; -webkit-line-clamp: 2; margin-bottom: 0; }
         .carousel-slide .meta, .carousel-slide .bookmark-btn { color: #d4d4d8; }
         .carousel-slide .bookmark-btn:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+        .carousel-progress-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--wire); width: 0%; z-index: 25; transition: width linear; }
+        .carousel-slide.active .carousel-progress-bar { width: 100%; transition-duration: 5s; }
 
         .carousel-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 20; background: rgba(0,0,0,0.35); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .carousel-nav:hover { background: rgba(0,0,0,0.6); }
@@ -272,7 +293,7 @@
                         <button class="icon-btn" onclick="toggleSearch()" title="Search" aria-label="Search articles">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </button>
-                        <button class="icon-btn" onclick="init()" title="Refresh feed" aria-label="Refresh feed">
+                        <button class="icon-btn" onclick="fetchArticlesFromSupabase()" title="Refresh feed" aria-label="Refresh feed">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                         </button>
                         <button id="theme-btn" class="icon-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode"></button>
@@ -306,10 +327,13 @@
 
             <div class="layout-segmented" id="layout-segmented">
                 <div class="seg-slider" id="seg-slider"></div>
+                <button class="seg-btn" data-view="grid-1" title="1 column" aria-label="1 column view">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1"/></svg>
+                </button>
                 <button class="seg-btn" data-view="grid-2" title="2 columns" aria-label="2 column grid view">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
                 </button>
-                <button class="seg-btn desktop-only" data-view="grid-3" title="3 columns" aria-label="3 column grid view">
+                <button class="seg-btn" data-view="grid-3" title="3 columns" aria-label="3 column grid view">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/></svg>
                 </button>
                 <button class="seg-btn active" data-view="grid-4" title="4 columns" aria-label="4 column grid view">
@@ -318,7 +342,7 @@
                 <button class="seg-btn" data-view="list" title="List view" aria-label="List view">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                 </button>
-                <button class="seg-btn desktop-only" data-view="text" title="Text view" aria-label="Compact text view">
+                <button class="seg-btn" data-view="text" title="Text view" aria-label="Compact text view">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 </button>
             </div>
@@ -393,13 +417,13 @@
 
         let globalData = [];
         let filteredData = [];
-        const itemsPerPage = 19;
+        const itemsPerPage = 20;
         let currentDisplayed = itemsPerPage;
 
-        let activeCategory = localStorage.getItem('newsCategory') || 'All';
-        let activeSource = localStorage.getItem('newsSource') || 'All';
-        let activeLanguage = localStorage.getItem('newsLang') || 'All';
-        let currentView = localStorage.getItem('newsView') || 'grid-4';
+        let activeCategories = safeParse(localStorage.getItem('newsCategories'), ['All']);
+        let activeSources = safeParse(localStorage.getItem('newsSources'), ['All']);
+        let activeLanguages = safeParse(localStorage.getItem('newsLanguages'), ['All']);
+        let currentView = localStorage.getItem('newsView') || (window.innerWidth < 768 ? 'grid-1' : 'grid-4');
         let searchDebounce = null;
 
         let carouselInterval;
@@ -414,7 +438,6 @@
             try { const v = JSON.parse(str); return Array.isArray(v) ? v : fallback; } catch (e) { return fallback; }
         }
 
-        // Escapes text before it is inserted via innerHTML.
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -425,8 +448,6 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // Deterministic short id for DOM node ids — unlike btoa(), this never throws on
-        // non-Latin1 (e.g. Bangla) URLs.
         function hashId(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -501,7 +522,6 @@
             }
         }
 
-        // ---------- View (grid/list/text) ----------
         function applyView(viewType) {
             currentView = viewType;
             localStorage.setItem('newsView', viewType);
@@ -516,9 +536,9 @@
         }
 
         function positionSegSlider() {
-            const activeBtn = document.querySelector('.seg-btn.active:not(.desktop-only), .seg-btn.active');
+            const activeBtn = document.querySelector('.seg-btn.active');
             const slider = document.getElementById('seg-slider');
-            if (activeBtn && slider) {
+            if (activeBtn && slider && window.getComputedStyle(activeBtn).display !== 'none') {
                 slider.style.width = activeBtn.offsetWidth + 'px';
                 slider.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
             }
@@ -530,7 +550,7 @@
             if (btn) applyView(btn.dataset.view);
         });
 
-        // ---------- Filters ----------
+        // Initialize available filter options from already fetched global data
         function setupFilters() {
             const tagContainer = document.getElementById('filter-container');
             const tagsSet = new Set();
@@ -538,50 +558,69 @@
                 parseTags(item).forEach(t => { if (t && t !== item.source_name && t !== 'Top News') tagsSet.add(t); });
             });
 
-            tagContainer.innerHTML = `<button class="capsule ${activeCategory === 'All' ? 'active' : ''}" data-category="All">All topics</button>`;
+            tagContainer.innerHTML = `<button class="capsule ${activeCategories.includes('All') ? 'active' : ''}" data-category="All">All topics</button>`;
             Array.from(tagsSet).sort().forEach(cat => {
-                tagContainer.innerHTML += `<button class="capsule ${activeCategory === cat ? 'active' : ''}" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`;
+                const isActive = activeCategories.includes(cat);
+                tagContainer.innerHTML += `<button class="capsule ${isActive ? 'active' : ''}" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`;
             });
 
             const sourceContainer = document.getElementById('source-filter-container');
             const sourcesSet = new Set();
             globalData.forEach(item => { if (item.source_name) sourcesSet.add(item.source_name); });
 
-            sourceContainer.innerHTML = `<button class="capsule ${activeSource === 'All' ? 'active' : ''}" data-source="All">All sources</button>`;
+            sourceContainer.innerHTML = `<button class="capsule ${activeSources.includes('All') ? 'active' : ''}" data-source="All">All sources</button>`;
             Array.from(sourcesSet).sort().forEach(src => {
-                sourceContainer.innerHTML += `<button class="capsule ${activeSource === src ? 'active' : ''}" data-source="${escapeHtml(src)}">${escapeHtml(src)}</button>`;
+                const isActive = activeSources.includes(src);
+                sourceContainer.innerHTML += `<button class="capsule ${isActive ? 'active' : ''}" data-source="${escapeHtml(src)}">${escapeHtml(src)}</button>`;
             });
 
             document.querySelectorAll(`#lang-filter-container .capsule`).forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.lang === activeLanguage);
+                const lang = btn.dataset.lang;
+                btn.classList.toggle('active', activeLanguages.includes(lang));
             });
+        }
+
+        function handleMultiSelect(clickedVal, currentArray, allVal) {
+            if (clickedVal === allVal) {
+                return [allVal];
+            }
+            let next = currentArray.filter(v => v !== allVal);
+            if (next.includes(clickedVal)) {
+                next = next.filter(v => v !== clickedVal);
+            } else {
+                next.push(clickedVal);
+            }
+            if (next.length === 0) {
+                return [allVal];
+            }
+            return next;
         }
 
         document.getElementById('filter-container').addEventListener('click', (e) => {
             const btn = e.target.closest('.capsule');
             if (!btn) return;
-            activeCategory = btn.dataset.category;
-            localStorage.setItem('newsCategory', activeCategory);
-            document.querySelectorAll('#filter-container .capsule').forEach(b => b.classList.toggle('active', b === btn));
-            applyFiltersAndSort();
+            activeCategories = handleMultiSelect(btn.dataset.category, activeCategories, 'All');
+            localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
+            setupFilters();
+            fetchArticlesFromSupabase();
         });
 
         document.getElementById('source-filter-container').addEventListener('click', (e) => {
             const btn = e.target.closest('.capsule');
             if (!btn) return;
-            activeSource = btn.dataset.source;
-            localStorage.setItem('newsSource', activeSource);
-            document.querySelectorAll('#source-filter-container .capsule').forEach(b => b.classList.toggle('active', b === btn));
-            applyFiltersAndSort();
+            activeSources = handleMultiSelect(btn.dataset.source, activeSources, 'All');
+            localStorage.setItem('newsSources', JSON.stringify(activeSources));
+            setupFilters();
+            fetchArticlesFromSupabase();
         });
 
         document.getElementById('lang-filter-container').addEventListener('click', (e) => {
             const btn = e.target.closest('.capsule');
             if (!btn) return;
-            activeLanguage = btn.dataset.lang;
-            localStorage.setItem('newsLang', activeLanguage);
-            document.querySelectorAll('#lang-filter-container .capsule').forEach(b => b.classList.toggle('active', b === btn));
-            applyFiltersAndSort();
+            activeLanguages = handleMultiSelect(btn.dataset.lang, activeLanguages, 'All');
+            localStorage.setItem('newsLanguages', JSON.stringify(activeLanguages));
+            setupFilters();
+            fetchArticlesFromSupabase();
         });
 
         document.getElementById('search-box').addEventListener('input', () => {
@@ -589,6 +628,53 @@
             searchDebounce = setTimeout(applyFiltersAndSort, 250);
         });
         document.getElementById('sort-box').addEventListener('change', applyFiltersAndSort);
+
+        // Fetch direct from Supabase matching selected sources and filters
+        async function fetchArticlesFromSupabase() {
+            renderSkeletons(8);
+            try {
+                let query = supabaseClient
+                    .from('news_articles')
+                    .select('*')
+                    .order('published_at', { ascending: false });
+
+                // Apply source filtering directly at the database query level
+                if (!activeSources.includes('All')) {
+                    const sourceListStr = activeSources.map(s => `"${s}"`).join(',');
+                    query = query.in('source_name', activeSources);
+                }
+
+                // Apply language filtering at database level
+                if (!activeLanguages.includes('All')) {
+                    query = query.in('language', activeLanguages);
+                }
+
+                query = query.limit(300);
+
+                const { data, error } = await query;
+                if (error) throw error;
+
+                globalData = data || [];
+
+                if (globalData.length > 0) {
+                    setupFilters();
+                    renderTicker(globalData.slice(0, 12));
+                } else {
+                    document.getElementById('ticker-bar').style.display = 'none';
+                }
+
+                document.getElementById('sort-box').value =
+                    (activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All')) ? 'newest' : document.getElementById('sort-box').value;
+
+                applyFiltersAndSort();
+                setTimeout(positionSegSlider, 50);
+
+            } catch (error) {
+                console.error("Supabase Error:", error);
+                document.getElementById('ticker-bar').style.display = 'none';
+                renderErrorState();
+            }
+        }
 
         function applyFiltersAndSort() {
             const searchTerm = document.getElementById('search-box').value.trim().toLowerCase();
@@ -600,16 +686,12 @@
                 filteredData = filteredData.filter(item => bookmarks.includes(item.url));
             }
 
-            if (activeCategory !== 'All') {
-                filteredData = filteredData.filter(item => parseTags(item).includes(activeCategory));
-            }
-
-            if (activeSource !== 'All') {
-                filteredData = filteredData.filter(item => item.source_name === activeSource);
-            }
-
-            if (activeLanguage !== 'All') {
-                filteredData = filteredData.filter(item => item.language && item.language.toLowerCase() === activeLanguage.toLowerCase());
+            // Client-side topic/category filtering to correctly evaluate multi-select tags inside JSON/arrays
+            if (!activeCategories.includes('All')) {
+                filteredData = filteredData.filter(item => {
+                    const itemTags = parseTags(item);
+                    return activeCategories.some(cat => itemTags.includes(cat));
+                });
             }
 
             if (searchTerm) {
@@ -634,7 +716,16 @@
             renderArticles();
         }
 
-        // ---------- Read / bookmark state ----------
+        window.filterByTag = function(tag) {
+            if (!activeCategories.includes(tag)) {
+                activeCategories = [tag];
+                localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
+                setupFilters();
+                fetchArticlesFromSupabase();
+            }
+            window.scrollTo({ top: 400, behavior: 'smooth' });
+        }
+
         function markRead(url) {
             if (!readArticles.includes(url)) {
                 readArticles.push(url);
@@ -661,8 +752,6 @@
             return window.CSS && CSS.escape ? CSS.escape(str) : str.replace(/["\\]/g, '\\$&');
         }
 
-        // Single delegated listener handles mark-read + bookmark clicks across the
-        // whole feed, so per-card templates never need to embed raw urls in JS strings.
         document.getElementById('news-container').addEventListener('click', (e) => {
             const bookmarkBtn = e.target.closest('.bookmark-btn');
             if (bookmarkBtn) {
@@ -670,11 +759,16 @@
                 toggleBookmark(bookmarkBtn.dataset.url);
                 return;
             }
+            const tagBadge = e.target.closest('.tag[data-tag]');
+            if (tagBadge) {
+                e.preventDefault();
+                filterByTag(tagBadge.dataset.tag);
+                return;
+            }
             const link = e.target.closest('a[data-url]');
             if (link) markRead(link.dataset.url);
         });
 
-        // ---------- Carousel ----------
         function buildCarouselHtml(items) {
             carouselTotal = items.length;
             currentSlide = 0;
@@ -682,7 +776,9 @@
             const slidesHtml = items.map((item, index) => {
                 const isBookmarked = bookmarks.includes(item.url);
                 const snippet = item.summary || '';
-                const primaryTag = item.source_name || 'News';
+                const sourceTag = item.source_name || 'News';
+                const topicTags = parseTags(item).filter(t => t !== sourceTag && t !== 'Top News');
+                const primaryTopic = topicTags[0] || '';
                 const url = escapeHtml(item.url);
 
                 return `
@@ -696,7 +792,10 @@
 
                         <div class="news-content">
                             <div class="content-main">
-                                <span class="tag">${escapeHtml(primaryTag)}</span>
+                                <div class="tags-group">
+                                    <span class="tag" onclick="filterByTag('${escapeHtml(sourceTag)}')" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>
+                                    ${primaryTopic ? `<span class="tag" onclick="filterByTag('${escapeHtml(primaryTopic)}')" data-tag="${escapeHtml(primaryTopic)}">${escapeHtml(primaryTopic)}</span>` : ''}
+                                </div>
                                 <a class="news-title" href="${url}" target="_blank" rel="noopener" data-url="${url}">${escapeHtml(item.title)}</a>
                                 ${snippet ? `<div class="snippet">${escapeHtml(snippet)}</div>` : ''}
                             </div>
@@ -708,6 +807,7 @@
                                 <div class="meta"><span>${getRelativeTime(item.published_at)}</span></div>
                             </div>
                         </div>
+                        <div class="carousel-progress-bar"></div>
                     </div>
                 `;
             }).join('');
@@ -717,7 +817,7 @@
             `).join('');
 
             return `
-                <div class="hero-carousel" id="hero-carousel">
+                <div class="hero-carousel" id="hero-carousel" onmouseenter="pauseCarousel()" onmouseleave="resumeCarousel()">
                     ${slidesHtml}
                     <button class="carousel-nav prev" onclick="moveSlide(-1)" aria-label="Previous story">&#10094;</button>
                     <button class="carousel-nav next" onclick="moveSlide(1)" aria-label="Next story">&#10095;</button>
@@ -750,7 +850,42 @@
             if (reduceMotion) return;
             carouselInterval = setInterval(() => { moveSlide(1); }, 5000);
         }
-        function resetCarouselTimer() { startCarouselTimer(); }
+
+        window.pauseCarousel = function() {
+            clearInterval(carouselInterval);
+            const activeBar = document.querySelector('.carousel-slide.active .carousel-progress-bar');
+            if (activeBar) {
+                const computedWidth = window.getComputedStyle(activeBar).width;
+                activeBar.style.transition = 'none';
+                activeBar.style.width = computedWidth;
+            }
+        }
+
+        window.resumeCarousel = function() {
+            const activeBar = document.querySelector('.carousel-slide.active .carousel-progress-bar');
+            if (activeBar) {
+                const currentW = parseFloat(window.getComputedStyle(activeBar).width);
+                const parentW = activeBar.parentElement.offsetWidth;
+                const remainingRatio = 1 - (currentW / parentW);
+                const remainingTime = 5000 * remainingRatio;
+                activeBar.style.transition = `width ${remainingTime}ms linear`;
+                activeBar.style.width = '100%';
+            }
+            startCarouselTimer();
+        }
+
+        function resetCarouselTimer() {
+            const activeBar = document.querySelector('.carousel-slide.active .carousel-progress-bar');
+            if (activeBar) {
+                activeBar.style.transition = 'none';
+                activeBar.style.width = '0%';
+                setTimeout(() => {
+                    activeBar.style.transition = 'width 5s linear';
+                    activeBar.style.width = '100%';
+                }, 50);
+            }
+            startCarouselTimer();
+        }
 
         function setupCarouselSwipe(el) {
             el.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
@@ -762,7 +897,6 @@
             }, { passive: true });
         }
 
-        // ---------- Ticker ----------
         function renderTicker(items) {
             const bar = document.getElementById('ticker-bar');
             if (!items.length) { bar.style.display = 'none'; return; }
@@ -773,7 +907,6 @@
             ).join('<span class="ticker-sep">&nbsp;&#8226;&nbsp;</span>');
 
             const track = document.getElementById('ticker-track');
-            // Duplicate content so the scroll loop (translateX -50%) is seamless.
             track.innerHTML = headlines + '<span class="ticker-sep">&nbsp;&#8226;&nbsp;</span>' + headlines;
 
             track.querySelectorAll('a').forEach(a => {
@@ -781,13 +914,14 @@
             });
         }
 
-        // ---------- Cards ----------
         function buildCardHtml(item) {
             const isRead = readArticles.includes(item.url);
             const isBookmarked = bookmarks.includes(item.url);
             const cardId = hashId(item.url);
             const snippet = item.summary || '';
-            const primaryTag = item.source_name || 'News';
+            const sourceTag = item.source_name || 'News';
+            const topicTags = parseTags(item).filter(t => t !== sourceTag && t !== 'Top News');
+            const primaryTopic = topicTags[0] || '';
             const url = escapeHtml(item.url);
 
             const imageHtml = item.image_url
@@ -800,7 +934,10 @@
                     <div class="news-content">
                         <div class="content-main">
                             <div class="card-header">
-                                <span class="tag desktop-tag">${escapeHtml(primaryTag)}</span>
+                                <div class="tags-group">
+                                    <span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>
+                                    ${primaryTopic ? `<span class="tag" data-tag="${escapeHtml(primaryTopic)}">${escapeHtml(primaryTopic)}</span>` : ''}
+                                </div>
                                 <button class="bookmark-btn grid-bookmark ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
                                     ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
                                 </button>
@@ -809,7 +946,10 @@
                             ${snippet ? `<div class="snippet">${escapeHtml(snippet)}</div>` : ''}
                             <div class="meta">
                                 <span>${getRelativeTime(item.published_at)}</span>
-                                <span class="tag text-only-tag">${escapeHtml(primaryTag)}</span>
+                                <div class="text-only-tags">
+                                    <span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>
+                                    ${primaryTopic ? `<span class="tag" data-tag="${escapeHtml(primaryTopic)}">${escapeHtml(primaryTopic)}</span>` : ''}
+                                </div>
                             </div>
                         </div>
                         <div class="bookmark-wrap">
@@ -853,21 +993,21 @@
                 <div class="state-panel">
                     <div class="state-title">Couldn't load the feed</div>
                     <div class="state-body">The connection to the news source failed. Check your connection and try again.</div>
-                    <button class="state-action" onclick="init()">Retry</button>
+                    <button class="state-action" onclick="fetchArticlesFromSupabase()">Retry</button>
                 </div>
             `;
             document.getElementById('load-more-btn').style.display = 'none';
         }
 
         window.resetFilters = function() {
-            activeCategory = 'All'; activeSource = 'All'; activeLanguage = 'All';
-            localStorage.setItem('newsCategory', 'All');
-            localStorage.setItem('newsSource', 'All');
-            localStorage.setItem('newsLang', 'All');
+            activeCategories = ['All']; activeSources = ['All']; activeLanguages = ['All'];
+            localStorage.setItem('newsCategories', JSON.stringify(['All']));
+            localStorage.setItem('newsSources', JSON.stringify(['All']));
+            localStorage.setItem('newsLanguages', JSON.stringify(['All']));
             document.getElementById('search-box').value = '';
             document.getElementById('sort-box').value = 'newest';
             setupFilters();
-            applyFiltersAndSort();
+            fetchArticlesFromSupabase();
         }
 
         function renderArticles() {
@@ -880,14 +1020,20 @@
                 return;
             }
 
-            const itemsToRender = filteredData.slice(0, currentDisplayed);
+            let itemsToRender = filteredData.slice(0, currentDisplayed);
+
+            // Keep grid layouts balanced with even counts
+            if (currentView.includes('grid') && itemsToRender.length % 2 !== 0 && itemsToRender.length > 1) {
+                itemsToRender = itemsToRender.slice(0, itemsToRender.length - 1);
+            }
+
             let html = '';
 
             const isGrid = currentView.includes('grid');
             const isDefaultState = isGrid
                 && document.getElementById('search-box').value === ''
                 && document.getElementById('sort-box').value === 'newest'
-                && activeCategory === 'All' && activeSource === 'All' && activeLanguage === 'All';
+                && activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All');
 
             if (isDefaultState && itemsToRender.length >= 3) {
                 html += buildCarouselHtml(itemsToRender.slice(0, 3));
@@ -911,42 +1057,9 @@
             }
         }
 
-        async function init() {
-            renderSkeletons(8);
-            try {
-                const { data, error } = await supabaseClient
-                    .from('news_articles')
-                    .select('*')
-                    .order('published_at', { ascending: false })
-                    .limit(200);
-
-                if (error) throw error;
-
-                globalData = data || [];
-
-                if (globalData.length > 0) {
-                    setupFilters();
-                    renderTicker(globalData.slice(0, 12));
-                } else {
-                    document.getElementById('ticker-bar').style.display = 'none';
-                }
-
-                document.getElementById('sort-box').value =
-                    (activeCategory === 'All' && activeSource === 'All' && activeLanguage === 'All') ? 'newest' : document.getElementById('sort-box').value;
-
-                applyFiltersAndSort();
-                setTimeout(positionSegSlider, 50);
-
-            } catch (error) {
-                console.error("Supabase Error:", error);
-                document.getElementById('ticker-bar').style.display = 'none';
-                renderErrorState();
-            }
-        }
-
         applyView(currentView);
-        init();
-        setInterval(init, 30 * 60 * 1000);
+        fetchArticlesFromSupabase();
+        setInterval(fetchArticlesFromSupabase, 30 * 60 * 1000);
     </script>
 </body>
 </html>
