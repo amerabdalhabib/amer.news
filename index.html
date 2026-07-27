@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
     <meta name="description" content="Amer.News delivers the latest breaking daily news, curated and updated in real-time from top English and Bangla sources.">
     <meta name="keywords" content="news aggregator, breaking news, Bangladesh news, world news, Amer Habib, wire desk">
     <meta name="author" content="Amer Abdal Habib">
@@ -58,7 +57,7 @@
             --wire-soft: rgba(255, 84, 104, 0.12);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { -webkit-text-size-adjust: 100%; }
+        html { -webkit-text-size-adjust: 100%; scroll-padding-top: 100px; }
         body { font-family: var(--font-body); background: var(--paper); color: var(--ink); line-height: 1.5; }
         body, .icon-btn, .capsule, .load-more, .modal-btn, .floating-filter-btn { transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
         a { color: inherit; text-decoration: none; }
@@ -91,13 +90,13 @@
         #search-container { display: none; padding: 10px 0; border-top: 1px solid var(--line); }
         .search-box { width: 100%; padding: 11px 12px; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink); font-family: var(--font-body); border-radius: var(--radius); outline: none; font-size: 0.95rem; }
 
-        /* ---------- Live ticker (signature element) ---------- */
+        /* ---------- Live ticker ---------- */
         .ticker-bar { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding: 7px 0; overflow: hidden; }
         .ticker-live { display: flex; align-items: center; gap: 5px; flex-shrink: 0; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; color: var(--wire); text-transform: uppercase; }
         .ticker-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--wire); animation: pulse 1.6s ease-in-out infinite; flex-shrink: 0; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
         .ticker-viewport { overflow: hidden; flex: 1; mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent); }
-        .ticker-track { display: flex; width: max-content; gap: 40px; font-family: var(--font-mono); font-size: 0.78rem; white-space: nowrap; animation: ticker-scroll 49.6s linear infinite; }
+        .ticker-track { display: flex; width: max-content; gap: 40px; font-family: var(--font-mono); font-size: 0.78rem; white-space: nowrap; animation: ticker-scroll 60.0s linear infinite; }
         .ticker-track:hover, .ticker-track.paused { animation-play-state: paused; }
         .ticker-track a { text-decoration: none; color: var(--ink-muted); }
         .ticker-track a:hover { color: var(--ink); }
@@ -116,24 +115,25 @@
         .seg-btn.active { color: #fff; }
         .seg-btn svg { width: 17px; height: 17px; }
 
-        /* Device specific view toggles */
         .seg-btn[data-view="grid-1"] { display: flex; }
         .seg-btn[data-view="grid-2"] { display: flex; }
         .seg-btn[data-view="grid-3"] { display: none; }
         .seg-btn[data-view="grid-4"] { display: none; }
         .seg-btn[data-view="list"] { display: none; }
         .seg-btn[data-view="text"] { display: flex; }
+        .seg-btn[data-view="masonry"] { display: none; }
 
         @media (min-width: 768px) {
             .seg-btn[data-view="grid-3"] { display: flex; }
             .seg-btn[data-view="list"] { display: flex; }
+            .seg-btn[data-view="masonry"] { display: flex; }
         }
         @media (min-width: 1024px) {
             .seg-btn[data-view="grid-4"] { display: flex; }
         }
 
         /* ---------- Filters ---------- */
-        .filter-accordion { border: none; margin-bottom: 18px; font-size: 0.85rem; }
+        .filter-accordion { border: none; margin-bottom: 18px; font-size: 0.85rem; scroll-margin-top: 100px; }
         .filter-accordion summary { padding: 10px 0; font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; outline: none; }
         .filter-accordion summary::-webkit-details-marker { display: none; }
         .filter-accordion summary:after { content: "Customise feed"; font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -148,30 +148,59 @@
         .capsule:hover { border-color: var(--wire); }
         .capsule.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
-        /* ---------- Grid systems & Responsive Fixes ---------- */
-        .layout-grid-1 { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }
-        .layout-grid-2, .layout-grid-3, .layout-grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        @media (min-width: 480px) {
-            .layout-grid-2, .layout-grid-3, .layout-grid-4 { gap: 20px; }
-        }
-        @media (min-width: 768px) {
-            .layout-grid-3 { grid-template-columns: repeat(3, 1fr); gap: 24px; }
-            .layout-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-        }
-        @media (min-width: 1024px) {
-            .layout-grid-3 { grid-template-columns: repeat(3, 1fr); }
-            .layout-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        /* ---------- Layout containers ---------- */
+        .layout-grid-1 { display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; }
+        
+        .layout-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; }
+        .layout-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; width: 100%; }
+        .layout-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; }
+        
+        .layout-list { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+        .layout-text { display: flex; flex-direction: column; gap: 0; max-width: 900px; margin: 0 auto; }
+
+        @media (max-width: 767px) {
+            .layout-grid-2, .layout-grid-3, .layout-grid-4 { grid-template-columns: 1fr; }
         }
 
-        .layout-list { display: flex; flex-direction: column; gap: 15px; max-width: 900px; margin: 0 auto; }
-        .layout-text { display: flex; flex-direction: column; gap: 0; max-width: 900px; margin: 0 auto; }
+        /* ---------- Masonry / Newspaper Layout ---------- */
+        .layout-masonry { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
+        @media (min-width: 768px) {
+            .layout-masonry { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1024px) {
+            .layout-masonry { grid-template-columns: repeat(3, 1fr); }
+        }
+        .layout-masonry .news-card.span-2 {
+            grid-column: span 1;
+        }
+        @media (min-width: 768px) {
+            .layout-masonry .news-card.span-2 {
+                grid-column: span 2;
+            }
+        }
 
         /* ---------- Card ---------- */
         .news-card { display: flex; flex-direction: column; padding: 0; }
         .news-card.read { opacity: 0.55; }
 
-        .card-image-wrap { position: relative; display: block; width: 100%; aspect-ratio: 16/10; margin-bottom: 12px; background: var(--paper-raised); border-radius: var(--radius); overflow: hidden; }
-        .news-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+        /* Missing image card styling for masonry */
+        .news-card.no-image-card { background: var(--ink); color: var(--paper); padding: 20px; border-radius: var(--radius); display: flex; flex-direction: column; justify-content: flex-start; }
+        .news-card.no-image-card .news-title { color: var(--paper); font-size: 1.15rem; }
+        .news-card.no-image-card .news-title:hover { color: var(--wire); }
+        .news-card.no-image-card .snippet { color: var(--ink-muted); }
+        .news-card.no-image-card .meta { color: var(--ink-muted); margin-top: 4px; margin-bottom: 0; }
+        .news-card.no-image-card .tag { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: var(--paper); }
+        .news-card.no-image-card .bookmark-btn, .news-card.no-image-card .share-btn { color: var(--paper); }
+        .news-card.no-image-card .bookmark-btn:hover, .news-card.no-image-card .share-btn:hover { background: rgba(255,255,255,0.15); color: var(--wire); }
+
+        /* Standard grid / list layout cropping to fit grid */
+        .card-image-wrap { position: relative; display: block; width: 100%; aspect-ratio: 16/10; background: var(--paper-raised); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+        .news-image { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--paper-raised); }
+
+        /* Masonry specific image handling: fill width, crop and align center, center */
+        .layout-masonry .card-image-wrap { aspect-ratio: 16/10; background: transparent; }
+        .layout-masonry .news-image { width: 100%; height: 100%; object-fit: cover; object-position: center center; display: block; background: transparent; }
+
         .no-image-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
         .news-content { display: flex; flex-direction: column; flex: 1; }
@@ -189,16 +218,25 @@
         .bookmark-btn.saved { color: var(--wire); }
 
         .news-title { display: block; color: var(--ink); text-decoration: none; font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; line-height: 1.25; margin-bottom: 8px; }
-        @media (min-width: 768px) { .news-title { font-size: 1.15rem; } }
+        .news-title.bn-title { font-size: calc(1.05rem * 0.9); }
+        @media (min-width: 768px) { 
+            .news-title { font-size: 1.15rem; } 
+            .news-title.bn-title { font-size: calc(1.15rem * 0.9); }
+        }
         .news-title:hover { color: var(--wire); }
 
-        .snippet { font-size: 0.8rem; color: var(--ink-muted); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; flex-grow: 1; }
+        .snippet { font-size: 0.8rem; color: var(--ink-muted); margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; }
         @media (min-width: 768px) { .snippet { font-size: 0.85rem; } }
 
         .meta { color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.7rem; display: flex; align-items: center; gap: 10px; margin-top: auto; flex-wrap: wrap; }
         .text-only-tags { display: none; gap: 6px; align-items: center; }
 
-        .layout-list .news-card { flex-direction: row; gap: 20px; align-items: flex-start; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
+        /* Masonry custom meta placement (right below summary, no bottom gap stretch) */
+        .layout-masonry .news-card { justify-content: flex-start; }
+        .layout-masonry .news-card .news-content { flex: 0 0 auto; }
+        .layout-masonry .news-card .meta { margin-top: 4px; margin-bottom: 0; flex-grow: 0; }
+
+        .layout-list .news-card { flex-direction: row; gap: 20px; align-items: flex-start; padding-bottom: 15px; border-bottom: 1px solid var(--line); width: 100%; }
         .layout-list .card-image-wrap { width: 240px; aspect-ratio: 16/10; flex-shrink: 0; margin-bottom: 0; }
         @media (max-width: 767px) {
             .layout-list .news-card { flex-direction: column; gap: 0; }
@@ -213,27 +251,30 @@
         .layout-text .news-content { flex-direction: row; justify-content: space-between; width: 100%; }
         .layout-text .card-header { display: none; }
         .layout-text .news-title { font-size: 0.98rem; font-weight: 700; display: block; margin: 0 0 4px 0; }
+        .layout-text .news-title.bn-title { font-size: calc(0.98rem * 0.9); }
         .layout-text .snippet { font-size: 0.8rem; margin: 0 0 6px 0; -webkit-line-clamp: 2; flex-grow: 0; }
         .layout-text .meta { font-size: 0.7rem; margin-top: 0; }
         .layout-text .text-only-tags { display: inline-flex; }
         .layout-text .bookmark-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 15px; }
 
         /* ---------- Hero carousel ---------- */
-        .hero-carousel { grid-column: 1 / -1; position: relative; height: clamp(260px, 55vw, 440px); border-radius: var(--radius); overflow: hidden; margin-bottom: 4px; background: var(--paper-raised); touch-action: pan-y; }
+        .hero-carousel { grid-column: 1 / -1; position: relative; height: 50vh; border-radius: var(--radius); overflow: hidden; margin-bottom: 4px; background: var(--paper-raised); touch-action: pan-y; width: 100%; }
         .carousel-slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
         .carousel-slide.active { opacity: 1; pointer-events: auto; }
 
         .hero-full-link { position: absolute; inset: 0; z-index: 10; }
         .carousel-slide .card-image-wrap { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; margin: 0; border-radius: 0; z-index: 1; }
+        .carousel-slide .news-image { width: 100%; height: 100%; object-fit: cover; max-height: none; }
         .carousel-slide .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 25%, rgba(0,0,0,0.88) 100%); z-index: 2; }
         .wire-stamp { position: absolute; top: 14px; left: 14px; z-index: 12; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; color: #fff; background: var(--wire); padding: 4px 10px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.06em; pointer-events: none; }
 
-        .carousel-slide .news-content { position: relative; z-index: 11; padding: 20px; padding-top: 40px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .carousel-slide .news-content { position: relative; z-index: 11; padding: 20px; padding-top: 40px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; pointer-events: none; height: 100%; }
         .carousel-slide .news-content a, .carousel-slide .news-content button { pointer-events: auto; }
         .carousel-slide .tag { background: rgba(255,255,255,0.15); border: none; color: #fff; width: fit-content; }
         .carousel-slide .news-title { color: #fff; font-size: 1.35rem; }
+        .carousel-slide .news-title.bn-title { font-size: calc(1.35rem * 0.9); }
         .carousel-slide .news-title:hover { color: #fff; text-decoration: underline; }
-        .carousel-slide .snippet { color: #d4d4d8; font-size: 0.9rem; -webkit-line-clamp: 2; margin-bottom: 0; }
+        .carousel-slide .snippet { display: none; }
         .carousel-slide .meta, .carousel-slide .bookmark-btn { color: #d4d4d8; }
         .carousel-slide .bookmark-btn:hover { color: #fff; background: rgba(255,255,255,0.15); }
 
@@ -252,8 +293,9 @@
 
         @media (min-width: 768px) {
             .carousel-slide .news-content { flex-direction: row; align-items: flex-end; justify-content: space-between; padding: 36px; gap: 30px; }
-            .carousel-slide .content-main { flex: 1; max-width: 66%; display: flex; flex-direction: column; gap: 10px; }
+            .carousel-slide .content-main { flex: 1; max-width: 66%; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; }
             .carousel-slide .news-title { font-size: 2rem; }
+            .carousel-slide .news-title.bn-title { font-size: calc(2rem * 0.9); }
             .carousel-slide .bookmark-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; margin-left: 0; }
         }
 
@@ -301,7 +343,6 @@
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
 
-<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-8X1572S1X5"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -341,7 +382,7 @@
                 </div>
 
                 <div id="search-container">
-                    <input type="text" id="search-box" class="search-box" placeholder="Search articles, keywords..." aria-label="Search articles">
+                    <input type="text" id="search-box" class="search-box" placeholder="Search entire database (titles, summaries)..." aria-label="Search articles">
                 </div>
             </header>
 
@@ -375,6 +416,9 @@
                 </button>
                 <button class="seg-btn active" data-view="grid-4" title="4 columns" aria-label="4 column grid view">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="3.5" height="18" rx="1"/><rect x="7.5" y="3" width="3.5" height="18" rx="1"/><rect x="13" y="3" width="3.5" height="18" rx="1"/><rect x="18.5" y="3" width="3.5" height="18" rx="1"/></svg>
+                </button>
+                <button class="seg-btn" data-view="masonry" title="Newspaper layout" aria-label="Newspaper layout view">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
                 </button>
                 <button class="seg-btn" data-view="list" title="List view" aria-label="List view">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -492,6 +536,11 @@
                 .replace(/'/g, '&#39;');
         }
 
+        function isBanglaText(str) {
+            if (!str) return false;
+            return /[\u0980-\u09FF]/.test(str);
+        }
+
         function hashId(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -548,7 +597,9 @@
             const details = document.getElementById('filter-details');
             details.open = !details.open;
             if (details.open) {
-                details.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const elementPosition = details.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - 90;
+                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
             }
         }
 
@@ -584,6 +635,9 @@
         }
 
         function applyView(viewType) {
+            if (viewType === 'masonry' && window.innerWidth < 768) {
+                viewType = 'grid-2';
+            }
             currentView = viewType;
             localStorage.setItem('newsView', viewType);
             document.getElementById('news-container').className = `layout-${viewType}`;
@@ -685,7 +739,7 @@
 
         document.getElementById('search-box').addEventListener('input', () => {
             clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(applyFiltersAndSort, 250);
+            searchDebounce = setTimeout(fetchArticlesFromSupabase, 400);
         });
         document.getElementById('sort-box').addEventListener('change', applyFiltersAndSort);
 
@@ -705,7 +759,12 @@
                     query = query.in('language', activeLanguages);
                 }
 
-                query = query.limit(300);
+                const searchTerm = document.getElementById('search-box').value.trim();
+                if (searchTerm) {
+                    query = query.or(`title.ilike.%${searchTerm}%,summary.ilike.%${searchTerm}%`);
+                }
+
+                query = query.limit(500);
 
                 const { data, error } = await query;
                 if (error) throw error;
@@ -720,7 +779,7 @@
                 }
 
                 document.getElementById('sort-box').value =
-                    (activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All')) ? 'newest' : document.getElementById('sort-box').value;
+                    (activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All') && !searchTerm) ? 'newest' : document.getElementById('sort-box').value;
 
                 applyFiltersAndSort();
                 setTimeout(positionSegSlider, 50);
@@ -733,7 +792,6 @@
         }
 
         function applyFiltersAndSort() {
-            const searchTerm = document.getElementById('search-box').value.trim().toLowerCase();
             const sortMode = document.getElementById('sort-box').value || 'newest';
 
             filteredData = [...globalData];
@@ -749,16 +807,9 @@
                 });
             }
 
-            if (searchTerm) {
-                filteredData = filteredData.filter(item =>
-                    (item.title && item.title.toLowerCase().includes(searchTerm)) ||
-                    (item.summary && item.summary.toLowerCase().includes(searchTerm))
-                );
-            }
-
             if (sortMode === 'oldest') {
                 filteredData.sort((a, b) => new Date(a.published_at || 0) - new Date(b.published_at || 0));
-            } else {
+            } else if (sortMode !== 'bookmarks') {
                 filteredData.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
             }
 
@@ -859,11 +910,11 @@
 
             const slidesHtml = items.map((item, index) => {
                 const isBookmarked = bookmarks.includes(item.url);
-                const snippet = item.summary || '';
                 const sourceTag = item.source_name || 'News';
                 const topicTags = parseTags(item).filter(t => t !== sourceTag && t !== 'Top News');
                 const url = escapeHtml(item.url);
                 const titleStr = escapeHtml(item.title);
+                const isBn = isBanglaText(item.title);
 
                 const allTagsHtml = [
                     `<span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>`,
@@ -884,8 +935,7 @@
                                 <div class="tags-group">
                                     ${allTagsHtml}
                                 </div>
-                                <a class="news-title" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
-                                ${snippet ? `<div class="snippet">${escapeHtml(snippet)}</div>` : ''}
+                                <a class="news-title ${isBn ? 'bn-title' : ''}" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
                             </div>
 
                             <div class="bookmark-wrap">
@@ -1007,7 +1057,7 @@
             });
         }
 
-        function buildCardHtml(item) {
+        function buildCardHtml(item, index = 0) {
             const isRead = readArticles.includes(item.url);
             const isBookmarked = bookmarks.includes(item.url);
             const cardId = hashId(item.url);
@@ -1016,18 +1066,53 @@
             const topicTags = parseTags(item).filter(t => t !== sourceTag && t !== 'Top News');
             const url = escapeHtml(item.url);
             const titleStr = escapeHtml(item.title);
+            const isBn = isBanglaText(item.title);
 
-            const imageHtml = item.image_url
+            const hasImage = Boolean(item.image_url);
+            const isMasonry = currentView === 'masonry';
+            const spanClass = (isMasonry && (index % 5 === 0 || index % 7 === 1)) ? 'span-2' : '';
+            const noImageCardClass = (!hasImage && isMasonry) ? 'no-image-card' : '';
+
+            const imageHtml = hasImage
                 ? `<a href="${url}" target="_blank" rel="noopener" data-url="${url}" class="card-image-wrap"><img src="${escapeHtml(item.image_url)}" alt="" class="news-image" loading="lazy"></a>`
-                : `<div class="card-image-wrap"><span class="no-image-placeholder">No image</span></div>`;
+                : (isMasonry ? '' : `<div class="card-image-wrap"><span class="no-image-placeholder">No image</span></div>`);
 
             const allTagsHtml = [
                 `<span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>`,
                 ...topicTags.map(t => `<span class="tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`)
             ].join('');
 
+            if (!hasImage && isMasonry) {
+                return `
+                    <div id="${cardId}" class="news-card ${spanClass} ${noImageCardClass} ${isRead ? 'read' : ''}">
+                        <div class="news-content">
+                            <div class="content-main">
+                                <div class="card-header">
+                                    <div class="tags-group">
+                                        ${allTagsHtml}
+                                    </div>
+                                    <div class="card-actions-group">
+                                        <button class="bookmark-btn ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
+                                            ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
+                                        </button>
+                                        <button class="share-btn" data-url="${url}" data-title="${titleStr}" title="Share" aria-label="Share article">
+                                            ${svgShare}
+                                        </button>
+                                    </div>
+                                </div>
+                                <a class="news-title ${isBn ? 'bn-title' : ''}" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
+                                ${snippet ? `<div class="snippet">${escapeHtml(snippet)}</div>` : ''}
+                                <div class="meta">
+                                    <span>${getRelativeTime(item.published_at)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             return `
-                <div id="${cardId}" class="news-card ${isRead ? 'read' : ''}">
+                <div id="${cardId}" class="news-card ${spanClass} ${isRead ? 'read' : ''}">
                     ${imageHtml}
                     <div class="news-content">
                         <div class="content-main">
@@ -1044,7 +1129,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <a class="news-title" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
+                            <a class="news-title ${isBn ? 'bn-title' : ''}" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
                             ${snippet ? `<div class="snippet">${escapeHtml(snippet)}</div>` : ''}
                             <div class="meta">
                                 <span>${getRelativeTime(item.published_at)}</span>
@@ -1125,30 +1210,21 @@
             }
 
             let itemsToRender = filteredData.slice(0, currentDisplayed);
-
-            if (currentView.includes('grid') && itemsToRender.length % 2 !== 0 && itemsToRender.length > 1) {
-                itemsToRender = itemsToRender.slice(0, itemsToRender.length - 1);
-            }
-
             let html = '';
 
-            const isGrid = currentView.includes('grid');
-            const isDefaultState = isGrid
-                && document.getElementById('search-box').value === ''
-                && document.getElementById('sort-box').value === 'newest'
-                && activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All');
+            const showCarousel = currentView !== 'text';
 
-            if (isDefaultState && itemsToRender.length >= 3) {
+            if (showCarousel && itemsToRender.length >= 3) {
                 html += buildCarouselHtml(itemsToRender.slice(0, 3));
-                itemsToRender.slice(3).forEach(item => html += buildCardHtml(item));
+                itemsToRender.slice(3).forEach((item, idx) => html += buildCardHtml(item, idx));
             } else {
-                itemsToRender.forEach(item => html += buildCardHtml(item));
+                itemsToRender.forEach((item, idx) => html += buildCardHtml(item, idx));
             }
 
             container.innerHTML = html;
             document.getElementById('load-more-btn').style.display = (currentDisplayed < filteredData.length) ? 'block' : 'none';
 
-            if (isDefaultState && itemsToRender.length >= 3) {
+            if (showCarousel && itemsToRender.length >= 3) {
                 const carouselEl = document.getElementById('hero-carousel');
                 const dotsContainer = carouselEl.querySelector('.carousel-dots');
                 if (dotsContainer) dotsContainer.addEventListener('click', (e) => {
