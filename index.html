@@ -183,7 +183,6 @@
         .news-card { display: flex; flex-direction: column; padding: 0; }
         .news-card.read { opacity: 0.55; }
 
-        /* Missing image card styling for masonry */
         .news-card.no-image-card { background: var(--ink); color: var(--paper); padding: 20px; border-radius: var(--radius); display: flex; flex-direction: column; justify-content: flex-start; }
         .news-card.no-image-card .news-title { color: var(--paper); font-size: 1.15rem; }
         .news-card.no-image-card .news-title:hover { color: var(--wire); }
@@ -193,11 +192,9 @@
         .news-card.no-image-card .bookmark-btn, .news-card.no-image-card .share-btn { color: var(--paper); }
         .news-card.no-image-card .bookmark-btn:hover, .news-card.no-image-card .share-btn:hover { background: rgba(255,255,255,0.15); color: var(--wire); }
 
-        /* Standard grid / list layout cropping to fit grid */
         .card-image-wrap { position: relative; display: block; width: 100%; aspect-ratio: 16/10; background: var(--paper-raised); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
         .news-image { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--paper-raised); }
 
-        /* Masonry specific image handling: fill width, crop and align center, center */
         .layout-masonry .card-image-wrap { aspect-ratio: 16/10; background: transparent; }
         .layout-masonry .news-image { width: 100%; height: 100%; object-fit: cover; object-position: center center; display: block; background: transparent; }
 
@@ -231,7 +228,6 @@
         .meta { color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.7rem; display: flex; align-items: center; gap: 10px; margin-top: auto; flex-wrap: wrap; }
         .text-only-tags { display: none; gap: 6px; align-items: center; }
 
-        /* Masonry custom meta placement (right below summary, no bottom gap stretch) */
         .layout-masonry .news-card { justify-content: flex-start; }
         .layout-masonry .news-card .news-content { flex: 0 0 auto; }
         .layout-masonry .news-card .meta { margin-top: 4px; margin-bottom: 0; flex-grow: 0; }
@@ -338,7 +334,6 @@
         .modal-btn { width: 100%; padding: 11px; background: var(--ink); color: var(--paper); border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer; margin-top: 8px; }
         .modal-btn:hover { background: var(--wire); }
         
-        /* Toast Notification Styling */
         .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--paper); padding: 8px 16px; border-radius: var(--radius); font-size: 0.85rem; font-family: var(--font-mono); opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 3000; pointer-events: none; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
@@ -371,7 +366,7 @@
                         <button class="icon-btn" onclick="toggleSearch()" title="Search" aria-label="Search articles">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </button>
-                        <button class="icon-btn" onclick="fetchArticlesFromSupabase()" title="Refresh feed" aria-label="Refresh feed">
+                        <button class="icon-btn" onclick="fetchArticlesFromSupabase(false)" title="Refresh feed" aria-label="Refresh feed">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                         </button>
                         <button id="theme-btn" class="icon-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode"></button>
@@ -506,7 +501,10 @@
         let globalData = [];
         let filteredData = [];
         const itemsPerPage = 20;
+        const BATCH_SIZE = 40; // Database pagination batch size
+        let dbOffset = 0;
         let currentDisplayed = itemsPerPage;
+        let hasMoreInDb = true;
 
         let activeCategories = safeParse(localStorage.getItem('newsCategories'), ['All']);
         let activeSources = safeParse(localStorage.getItem('newsSources'), ['All']);
@@ -710,17 +708,12 @@
             return next;
         }
 
-        // ==========================================
-        // EGRESS OPTIMIZATION: STEP 1 
-        // Replaced fetchArticlesFromSupabase with applyFiltersAndSort
-        // ==========================================
         document.getElementById('filter-container').addEventListener('click', (e) => {
             const btn = e.target.closest('.capsule');
             if (!btn) return;
             activeCategories = handleMultiSelect(btn.dataset.category, activeCategories, 'All');
             localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
-            setupFilters();
-            applyFiltersAndSort(); // Local filter, zero egress
+            fetchArticlesFromSupabase(false);
         });
 
         document.getElementById('source-filter-container').addEventListener('click', (e) => {
@@ -728,8 +721,7 @@
             if (!btn) return;
             activeSources = handleMultiSelect(btn.dataset.source, activeSources, 'All');
             localStorage.setItem('newsSources', JSON.stringify(activeSources));
-            setupFilters();
-            applyFiltersAndSort(); // Local filter, zero egress
+            fetchArticlesFromSupabase(false);
         });
 
         document.getElementById('lang-filter-container').addEventListener('click', (e) => {
@@ -737,62 +729,85 @@
             if (!btn) return;
             activeLanguages = handleMultiSelect(btn.dataset.lang, activeLanguages, 'All');
             localStorage.setItem('newsLanguages', JSON.stringify(activeLanguages));
-            setupFilters();
-            applyFiltersAndSort(); // Local filter, zero egress
+            fetchArticlesFromSupabase(false);
         });
 
         document.getElementById('search-box').addEventListener('input', () => {
             clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(fetchArticlesFromSupabase, 400);
+            searchDebounce = setTimeout(() => fetchArticlesFromSupabase(false), 400);
         });
         document.getElementById('sort-box').addEventListener('change', applyFiltersAndSort);
 
-        async function fetchArticlesFromSupabase() {
-            renderSkeletons(8);
+        // ==========================================
+        // SUPABASE FETCH WITH PAGINATION & FILTERING
+        // ==========================================
+        async function fetchArticlesFromSupabase(isLoadMore = false) {
+            if (!isLoadMore) {
+                dbOffset = 0;
+                hasMoreInDb = true;
+                currentDisplayed = itemsPerPage;
+                renderSkeletons(8);
+            } else {
+                const btn = document.getElementById('load-more-btn');
+                if (btn) btn.innerText = 'Loading...';
+            }
+
             try {
-                // ==========================================
-                // EGRESS OPTIMIZATION: STEP 4
-                // Explicitly select columns to reduce payload size
-                // ==========================================
                 let query = supabaseClient
                     .from('news_articles')
                     .select('url, title, summary, image_url, source_name, tags, published_at')
                     .order('published_at', { ascending: false });
 
+                // Filter Sources
                 if (!activeSources.includes('All')) {
                     query = query.in('source_name', activeSources);
                 }
 
+                // Filter Language
                 if (!activeLanguages.includes('All')) {
                     query = query.in('language', activeLanguages);
                 }
 
-                // ==========================================
-                // EGRESS OPTIMIZATION: STEP 2 & 5
-                // Limit search results to 50, standard limit 200
-                // ==========================================
+                // Filter Categories / Tags at DB level
+                if (!activeCategories.includes('All')) {
+                    const tagFilterQueries = activeCategories.map(cat => `tags.ilike.%${cat}%`).join(',');
+                    query = query.or(tagFilterQueries);
+                }
+
+                // Search Filter
                 const searchTerm = document.getElementById('search-box').value.trim();
                 if (searchTerm) {
                     query = query.or(`title.ilike.%${searchTerm}%,summary.ilike.%${searchTerm}%`);
-                    query = query.limit(50);
-                } else {
-                    query = query.limit(200); 
                 }
+
+                // Range-based Pagination (Pulls BATCH_SIZE items at a time)
+                query = query.range(dbOffset, dbOffset + BATCH_SIZE - 1);
 
                 const { data, error } = await query;
                 if (error) throw error;
 
-                globalData = data || [];
-
-                if (globalData.length > 0) {
-                    setupFilters();
-                    renderTicker(globalData.slice(0, 12));
-                } else {
-                    document.getElementById('ticker-bar').style.display = 'none';
+                const newItems = data || [];
+                if (newItems.length < BATCH_SIZE) {
+                    hasMoreInDb = false;
                 }
 
-                document.getElementById('sort-box').value =
-                    (activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All') && !searchTerm) ? 'newest' : document.getElementById('sort-box').value;
+                if (isLoadMore) {
+                    // Append newly fetched items to existing list without duplicates
+                    const existingUrls = new Set(globalData.map(i => i.url));
+                    const uniqueNewItems = newItems.filter(i => !existingUrls.has(i.url));
+                    globalData = [...globalData, ...uniqueNewItems];
+                } else {
+                    globalData = newItems;
+                    setupFilters();
+                }
+
+                dbOffset += newItems.length;
+
+                if (globalData.length > 0 && !isLoadMore) {
+                    renderTicker(globalData.slice(0, 12));
+                } else if (globalData.length === 0) {
+                    document.getElementById('ticker-bar').style.display = 'none';
+                }
 
                 applyFiltersAndSort();
                 setTimeout(positionSegSlider, 50);
@@ -801,6 +816,9 @@
                 console.error("Supabase Error:", error);
                 document.getElementById('ticker-bar').style.display = 'none';
                 renderErrorState();
+            } finally {
+                const btn = document.getElementById('load-more-btn');
+                if (btn) btn.innerText = 'Load more';
             }
         }
 
@@ -813,34 +831,31 @@
                 filteredData = filteredData.filter(item => bookmarks.includes(item.url));
             }
 
-            if (!activeCategories.includes('All')) {
-                filteredData = filteredData.filter(item => {
-                    const itemTags = parseTags(item);
-                    return activeCategories.some(cat => itemTags.includes(cat));
-                });
-            }
-
             if (sortMode === 'oldest') {
                 filteredData.sort((a, b) => new Date(a.published_at || 0) - new Date(b.published_at || 0));
             } else if (sortMode !== 'bookmarks') {
                 filteredData.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
             }
 
-            currentDisplayed = itemsPerPage;
             renderArticles();
         }
 
+        // Load More handles local expansion FIRST, then fetches next batch from Supabase
         window.loadMore = function() {
-            currentDisplayed += itemsPerPage;
-            renderArticles();
+            if (currentDisplayed < filteredData.length) {
+                currentDisplayed += itemsPerPage;
+                renderArticles();
+            } else if (hasMoreInDb) {
+                currentDisplayed += itemsPerPage;
+                fetchArticlesFromSupabase(true);
+            }
         }
 
         window.filterByTag = function(tag) {
             if (!activeCategories.includes(tag)) {
                 activeCategories = [tag];
                 localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
-                setupFilters();
-                applyFiltersAndSort(); // Changed to applyFiltersAndSort
+                fetchArticlesFromSupabase(false);
             }
             window.scrollTo({ top: 400, behavior: 'smooth' });
         }
@@ -1195,7 +1210,7 @@
                 <div class="state-panel">
                     <div class="state-title">Couldn't load the feed</div>
                     <div class="state-body">The connection to the news source failed. Check your connection and try again.</div>
-                    <button class="state-action" onclick="fetchArticlesFromSupabase()">Retry</button>
+                    <button class="state-action" onclick="fetchArticlesFromSupabase(false)">Retry</button>
                 </div>
             `;
             document.getElementById('load-more-btn').style.display = 'none';
@@ -1209,7 +1224,7 @@
             document.getElementById('search-box').value = '';
             document.getElementById('sort-box').value = 'newest';
             setupFilters();
-            fetchArticlesFromSupabase();
+            fetchArticlesFromSupabase(false);
         }
 
         function renderArticles() {
@@ -1235,7 +1250,10 @@
             }
 
             container.innerHTML = html;
-            document.getElementById('load-more-btn').style.display = (currentDisplayed < filteredData.length) ? 'block' : 'none';
+
+            // Show Load More button if there are more local filtered articles OR more matching records in Supabase
+            const hasMoreToLoad = (currentDisplayed < filteredData.length) || hasMoreInDb;
+            document.getElementById('load-more-btn').style.display = hasMoreToLoad ? 'block' : 'none';
 
             if (showCarousel && itemsToRender.length >= 3) {
                 const carouselEl = document.getElementById('hero-carousel');
@@ -1250,15 +1268,11 @@
         }
 
         applyView(currentView);
-        fetchArticlesFromSupabase();
+        fetchArticlesFromSupabase(false);
         
-        // ==========================================
-        // EGRESS OPTIMIZATION: STEP 3
-        // Only run background refreshes if user is actually looking at the page
-        // ==========================================
         setInterval(() => {
             if (!document.hidden) {
-                fetchArticlesFromSupabase();
+                fetchArticlesFromSupabase(false);
             }
         }, 30 * 60 * 1000);
     </script>
