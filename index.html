@@ -710,13 +710,17 @@
             return next;
         }
 
+        // ==========================================
+        // EGRESS OPTIMIZATION: STEP 1 
+        // Replaced fetchArticlesFromSupabase with applyFiltersAndSort
+        // ==========================================
         document.getElementById('filter-container').addEventListener('click', (e) => {
             const btn = e.target.closest('.capsule');
             if (!btn) return;
             activeCategories = handleMultiSelect(btn.dataset.category, activeCategories, 'All');
             localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
             setupFilters();
-            fetchArticlesFromSupabase();
+            applyFiltersAndSort(); // Local filter, zero egress
         });
 
         document.getElementById('source-filter-container').addEventListener('click', (e) => {
@@ -725,7 +729,7 @@
             activeSources = handleMultiSelect(btn.dataset.source, activeSources, 'All');
             localStorage.setItem('newsSources', JSON.stringify(activeSources));
             setupFilters();
-            fetchArticlesFromSupabase();
+            applyFiltersAndSort(); // Local filter, zero egress
         });
 
         document.getElementById('lang-filter-container').addEventListener('click', (e) => {
@@ -734,7 +738,7 @@
             activeLanguages = handleMultiSelect(btn.dataset.lang, activeLanguages, 'All');
             localStorage.setItem('newsLanguages', JSON.stringify(activeLanguages));
             setupFilters();
-            fetchArticlesFromSupabase();
+            applyFiltersAndSort(); // Local filter, zero egress
         });
 
         document.getElementById('search-box').addEventListener('input', () => {
@@ -746,9 +750,13 @@
         async function fetchArticlesFromSupabase() {
             renderSkeletons(8);
             try {
+                // ==========================================
+                // EGRESS OPTIMIZATION: STEP 4
+                // Explicitly select columns to reduce payload size
+                // ==========================================
                 let query = supabaseClient
                     .from('news_articles')
-                    .select('*')
+                    .select('url, title, summary, image_url, source_name, tags, published_at')
                     .order('published_at', { ascending: false });
 
                 if (!activeSources.includes('All')) {
@@ -759,12 +767,17 @@
                     query = query.in('language', activeLanguages);
                 }
 
+                // ==========================================
+                // EGRESS OPTIMIZATION: STEP 2 & 5
+                // Limit search results to 50, standard limit 200
+                // ==========================================
                 const searchTerm = document.getElementById('search-box').value.trim();
                 if (searchTerm) {
                     query = query.or(`title.ilike.%${searchTerm}%,summary.ilike.%${searchTerm}%`);
+                    query = query.limit(50);
+                } else {
+                    query = query.limit(200); 
                 }
-
-                query = query.limit(500);
 
                 const { data, error } = await query;
                 if (error) throw error;
@@ -827,7 +840,7 @@
                 activeCategories = [tag];
                 localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
                 setupFilters();
-                fetchArticlesFromSupabase();
+                applyFiltersAndSort(); // Changed to applyFiltersAndSort
             }
             window.scrollTo({ top: 400, behavior: 'smooth' });
         }
@@ -1238,7 +1251,16 @@
 
         applyView(currentView);
         fetchArticlesFromSupabase();
-        setInterval(fetchArticlesFromSupabase, 30 * 60 * 1000);
+        
+        // ==========================================
+        // EGRESS OPTIMIZATION: STEP 3
+        // Only run background refreshes if user is actually looking at the page
+        // ==========================================
+        setInterval(() => {
+            if (!document.hidden) {
+                fetchArticlesFromSupabase();
+            }
+        }, 30 * 60 * 1000);
     </script>
 </body>
 </html>
