@@ -87,8 +87,12 @@
         .icon-btn:hover { background: var(--wire-soft); opacity: 1; color: var(--wire); }
         .icon-btn svg { width: 18px; height: 18px; }
 
-        #search-container { display: none; padding: 10px 0; border-top: 1px solid var(--line); }
-        .search-box { width: 100%; padding: 11px 12px; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink); font-family: var(--font-body); border-radius: var(--radius); outline: none; font-size: 0.95rem; }
+        #search-container { display: none; padding: 10px 0; border-top: 1px solid var(--line); position: relative; }
+        .search-wrapper { display: flex; align-items: center; gap: 0; position: relative; }
+        .search-box { width: 100%; padding: 11px 36px 11px 12px; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink); font-family: var(--font-body); border-radius: var(--radius); outline: none; font-size: 0.95rem; }
+        .search-clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--ink-muted); cursor: pointer; width: 30px; height: 30px; display: none; align-items: center; justify-content: center; border-radius: 50%; padding: 0; }
+        .search-clear:hover { background: var(--wire-soft); color: var(--wire); }
+        .search-clear svg { width: 16px; height: 16px; }
 
         /* ---------- Live ticker ---------- */
         .ticker-bar { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding: 7px 0; overflow: hidden; }
@@ -147,6 +151,10 @@
         .capsule { background: var(--paper-raised); color: var(--ink); border: 1px solid var(--line); padding: 7px 13px; border-radius: 99px; cursor: pointer; font-size: 0.8rem; font-weight: 500; min-height: 34px; }
         .capsule:hover { border-color: var(--wire); }
         .capsule.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+        .clear-filters-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: 1px dashed var(--ink-muted); color: var(--ink-muted); padding: 7px 13px; border-radius: 99px; cursor: pointer; font-size: 0.78rem; font-weight: 500; min-height: 34px; font-family: var(--font-mono); }
+        .clear-filters-btn:hover { border-color: var(--wire); color: var(--wire); background: var(--wire-soft); }
+        .clear-filters-btn svg { width: 14px; height: 14px; }
 
         /* ---------- Layout containers ---------- */
         .layout-grid-1 { display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; }
@@ -371,7 +379,7 @@
                         <button class="icon-btn" onclick="toggleSearch()" title="Search" aria-label="Search articles">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </button>
-                        <button class="icon-btn" onclick="fetchArticlesFromSupabase()" title="Refresh feed" aria-label="Refresh feed">
+                        <button class="icon-btn" onclick="fetchArticlesFromSupabase(true)" title="Refresh feed" aria-label="Refresh feed">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                         </button>
                         <button id="theme-btn" class="icon-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode"></button>
@@ -382,7 +390,12 @@
                 </div>
 
                 <div id="search-container">
-                    <input type="text" id="search-box" class="search-box" placeholder="Search entire database (titles, summaries)..." aria-label="Search articles">
+                    <div class="search-wrapper">
+                        <input type="text" id="search-box" class="search-box" placeholder="Search..." aria-label="Search articles">
+                        <button id="search-clear-btn" class="search-clear" onclick="clearSearch()" title="Clear search" aria-label="Clear search">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -432,6 +445,15 @@
         <details class="filter-accordion" id="filter-details">
             <summary>Customise your feed</summary>
 
+             <div class="filter-group">
+                <span class="filter-label">Language</span>
+                <div id="lang-filter-container" class="filter-bar">
+                    <button class="capsule active" data-lang="All">Both</button>
+                    <button class="capsule" data-lang="English">English</button>
+                    <button class="capsule" data-lang="Bangla">Bangla</button>
+                </div>
+            </div>
+
             <div class="filter-group">
                 <span class="filter-label">Topics</span>
                 <div id="filter-container" class="filter-bar">
@@ -446,13 +468,11 @@
                 </div>
             </div>
 
-            <div class="filter-group">
-                <span class="filter-label">Language</span>
-                <div id="lang-filter-container" class="filter-bar">
-                    <button class="capsule active" data-lang="All">Both</button>
-                    <button class="capsule" data-lang="English">English</button>
-                    <button class="capsule" data-lang="Bangla">Bangla</button>
-                </div>
+            <div class="filter-group" style="margin-top: 6px;">
+                <button class="clear-filters-btn" onclick="clearAllFilters()" title="Reset all filters to default">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                    Clear all filters
+                </button>
             </div>
         </details>
 
@@ -461,7 +481,7 @@
         <button id="load-more-btn" class="load-more" onclick="loadMore()" style="display: none;">Load more</button>
 
         <footer>
-            Built with &#9829; by <a href="https://amerhabib.com/" target="_blank" rel="noopener">Amer Habib</a>
+            Built with &#9821; by <a href="https://amerhabib.com/" target="_blank" rel="noopener">Amer Habib</a>
         </footer>
     </div>
 
@@ -508,6 +528,15 @@
         const itemsPerPage = 20;
         let currentDisplayed = itemsPerPage;
 
+        let lastFetchTime = 0;
+        let lastFetchKey = '';
+        const CACHE_TTL = 120000; // 2 minutes
+
+        let lastAnyFetchTime = 0;
+        const MIN_FETCH_INTERVAL = 30000; // 30 seconds
+
+        let isFetching = false;
+
         let activeCategories = safeParse(localStorage.getItem('newsCategories'), ['All']);
         let activeSources = safeParse(localStorage.getItem('newsSources'), ['All']);
         let activeLanguages = safeParse(localStorage.getItem('newsLanguages'), ['All']);
@@ -522,6 +551,13 @@
         let readArticles = safeParse(localStorage.getItem('readArticles'), []);
         let bookmarks = safeParse(localStorage.getItem('bookmarks'), []);
 
+        // For incremental loading from DB
+        let fetchOffset = 0;
+        const FETCH_LIMIT = 100;
+        let hasMoreData = true;
+        let appendCount = 0;
+        const MAX_APPENDS = 3;
+
         function safeParse(str, fallback) {
             try { const v = JSON.parse(str); return Array.isArray(v) ? v : fallback; } catch (e) { return fallback; }
         }
@@ -529,10 +565,10 @@
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
+                .replace(/&/g, '&')
+                .replace(/</g, '<')
+                .replace(/>/g, '>')
+                .replace(/"/g, '"')
                 .replace(/'/g, '&#39;');
         }
 
@@ -580,7 +616,10 @@
             const el = document.getElementById('search-container');
             const show = el.style.display !== 'block';
             el.style.display = show ? 'block' : 'none';
-            if (show) document.getElementById('search-box').focus();
+            if (show) {
+                document.getElementById('search-box').focus();
+                updateSearchClearBtn();
+            }
         }
 
         window.toggleModal = function(id) { document.getElementById(id).style.display = 'flex'; }
@@ -665,6 +704,30 @@
             if (btn) applyView(btn.dataset.view);
         });
 
+        function updateSearchClearBtn() {
+            const val = document.getElementById('search-box').value;
+            document.getElementById('search-clear-btn').style.display = val ? 'flex' : 'none';
+        }
+
+        window.clearSearch = function() {
+            document.getElementById('search-box').value = '';
+            updateSearchClearBtn();
+            fetchArticlesFromSupabase(true);
+            document.getElementById('search-box').focus();
+        }
+
+        window.clearAllFilters = function() {
+            activeCategories = ['All'];
+            activeSources = ['All'];
+            activeLanguages = ['All'];
+            localStorage.setItem('newsCategories', JSON.stringify(['All']));
+            localStorage.setItem('newsSources', JSON.stringify(['All']));
+            localStorage.setItem('newsLanguages', JSON.stringify(['All']));
+            setupFilters();
+            fetchArticlesFromSupabase(true);
+            showToast("Filters cleared");
+        }
+
         function setupFilters() {
             const tagContainer = document.getElementById('filter-container');
             const tagsSet = new Set();
@@ -716,7 +779,7 @@
             activeCategories = handleMultiSelect(btn.dataset.category, activeCategories, 'All');
             localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
             setupFilters();
-            fetchArticlesFromSupabase();
+            fetchArticlesFromSupabase(true);
         });
 
         document.getElementById('source-filter-container').addEventListener('click', (e) => {
@@ -725,7 +788,7 @@
             activeSources = handleMultiSelect(btn.dataset.source, activeSources, 'All');
             localStorage.setItem('newsSources', JSON.stringify(activeSources));
             setupFilters();
-            fetchArticlesFromSupabase();
+            fetchArticlesFromSupabase(true);
         });
 
         document.getElementById('lang-filter-container').addEventListener('click', (e) => {
@@ -734,60 +797,139 @@
             activeLanguages = handleMultiSelect(btn.dataset.lang, activeLanguages, 'All');
             localStorage.setItem('newsLanguages', JSON.stringify(activeLanguages));
             setupFilters();
-            fetchArticlesFromSupabase();
+            fetchArticlesFromSupabase(true);
         });
 
         document.getElementById('search-box').addEventListener('input', () => {
+            updateSearchClearBtn();
             clearTimeout(searchDebounce);
-            searchDebounce = setTimeout(fetchArticlesFromSupabase, 400);
+            searchDebounce = setTimeout(() => {
+                // Clear all filters when searching to search the whole database
+                activeCategories = ['All'];
+                activeSources = ['All'];
+                activeLanguages = ['All'];
+                localStorage.setItem('newsCategories', JSON.stringify(['All']));
+                localStorage.setItem('newsSources', JSON.stringify(['All']));
+                localStorage.setItem('newsLanguages', JSON.stringify(['All']));
+                setupFilters();
+                fetchArticlesFromSupabase(true);
+            }, 400);
         });
         document.getElementById('sort-box').addEventListener('change', applyFiltersAndSort);
 
-        async function fetchArticlesFromSupabase() {
-            renderSkeletons(8);
+        async function fetchArticlesFromSupabase(force, append = false) {
+            // Guard: prevent duplicate in-flight fetches
+            if (isFetching) return;
+            isFetching = true;
+
             try {
-                let query = supabaseClient
-                    .from('news_articles')
-                    .select('*')
-                    .order('published_at', { ascending: false });
-
-                if (!activeSources.includes('All')) {
-                    query = query.in('source_name', activeSources);
-                }
-
-                if (!activeLanguages.includes('All')) {
-                    query = query.in('language', activeLanguages);
-                }
-
                 const searchTerm = document.getElementById('search-box').value.trim();
-                if (searchTerm) {
-                    query = query.or(`title.ilike.%${searchTerm}%,summary.ilike.%${searchTerm}%`);
+
+                // Aggressive rate limit: skip non-forced fetches within 30 seconds of any previous fetch
+                if (!force && lastAnyFetchTime > 0) {
+                    const now = Date.now();
+                    if ((now - lastAnyFetchTime) < MIN_FETCH_INTERVAL) {
+                        if (globalData.length > 0) {
+                            applyFiltersAndSort();
+                            setTimeout(positionSegSlider, 50);
+                        }
+                        return;
+                    }
                 }
 
-                query = query.limit(500);
+                const cacheKey = JSON.stringify({
+                    sources: activeSources,
+                    languages: activeLanguages,
+                    search: searchTerm,
+                    categories: activeCategories
+                });
 
-                const { data, error } = await query;
-                if (error) throw error;
+                // Skip fetch if cached data is still fresh and filters haven't changed
+                if (!force && globalData.length > 0) {
+                    const now = Date.now();
+                    if (cacheKey === lastFetchKey && (now - lastFetchTime) < CACHE_TTL) {
+                        applyFiltersAndSort();
+                        setTimeout(positionSegSlider, 50);
+                        return;
+                    }
+                }
 
-                globalData = data || [];
+                if (!append) {
+                    if (isFetching) renderSkeletons(8);
+                    fetchOffset = 0;
+                    hasMoreData = true;
+                    appendCount = 0;
+                }
 
-                if (globalData.length > 0) {
-                    setupFilters();
-                    renderTicker(globalData.slice(0, 12));
-                } else {
+                try {
+                    let query = supabaseClient
+                        .from('news_articles')
+                        .select('*')
+                        .order('published_at', { ascending: false })
+                        .range(fetchOffset, fetchOffset + FETCH_LIMIT - 1);
+
+                    if (!activeSources.includes('All')) {
+                        query = query.in('source_name', activeSources);
+                    }
+
+                    if (!activeLanguages.includes('All')) {
+                        query = query.in('language', activeLanguages);
+                    }
+
+                    if (searchTerm) {
+                        query = query.or(`title.ilike.%${searchTerm}%,summary.ilike.%${searchTerm}%`);
+                    }
+
+                    // Server-side category filtering via JSONB contains
+                    if (!activeCategories.includes('All')) {
+                        query = query.contains('tags', activeCategories);
+                    }
+
+                    const { data, error } = await query;
+                    if (error) throw error;
+
+                    const newData = data || [];
+                    hasMoreData = newData.length === FETCH_LIMIT;
+
+                    if (append && globalData.length > 0) {
+                        // Merge: append new data, avoiding duplicates by URL
+                        const existingUrls = new Set(globalData.map(d => d.url));
+                        const uniqueNew = newData.filter(d => !existingUrls.has(d.url));
+                        globalData = [...globalData, ...uniqueNew];
+                        appendCount++;
+                    } else {
+                        globalData = newData;
+                    }
+
+                    fetchOffset += FETCH_LIMIT;
+                    lastFetchKey = cacheKey;
+                    lastFetchTime = Date.now();
+                    lastAnyFetchTime = Date.now();
+
+                    if (globalData.length > 0) {
+                        setupFilters();
+                        renderTicker(globalData.slice(0, 12));
+                    } else {
+                        document.getElementById('ticker-bar').style.display = 'none';
+                    }
+
+                    document.getElementById('sort-box').value =
+                        (activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All') && !searchTerm) ? 'newest' : document.getElementById('sort-box').value;
+
+                    // Don't reset currentDisplayed when appending
+                    if (!append) {
+                        currentDisplayed = itemsPerPage;
+                    }
+                    applyFiltersAndSort();
+                    setTimeout(positionSegSlider, 50);
+
+                } catch (error) {
+                    console.error("Supabase Error:", error);
                     document.getElementById('ticker-bar').style.display = 'none';
+                    if (!append) renderErrorState();
                 }
-
-                document.getElementById('sort-box').value =
-                    (activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All') && !searchTerm) ? 'newest' : document.getElementById('sort-box').value;
-
-                applyFiltersAndSort();
-                setTimeout(positionSegSlider, 50);
-
-            } catch (error) {
-                console.error("Supabase Error:", error);
-                document.getElementById('ticker-bar').style.display = 'none';
-                renderErrorState();
+            } finally {
+                isFetching = false;
             }
         }
 
@@ -800,6 +942,8 @@
                 filteredData = filteredData.filter(item => bookmarks.includes(item.url));
             }
 
+            // No need to filter by categories here — now done server-side in fetchArticlesFromSupabase
+            // But keep as safety net for already-loaded data
             if (!activeCategories.includes('All')) {
                 filteredData = filteredData.filter(item => {
                     const itemTags = parseTags(item);
@@ -813,13 +957,30 @@
                 filteredData.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
             }
 
-            currentDisplayed = itemsPerPage;
+            // Don't reset currentDisplayed here — it's managed by loadMore
             renderArticles();
         }
 
         window.loadMore = function() {
+            if (isFetching) return;
+
             currentDisplayed += itemsPerPage;
-            renderArticles();
+
+            // If we've exhausted the filtered data and there might be more in the DB, fetch more
+            if (currentDisplayed >= filteredData.length && hasMoreData && appendCount < MAX_APPENDS) {
+                const btn = document.getElementById('load-more-btn');
+                btn.textContent = 'Loading more...';
+                btn.disabled = true;
+                fetchArticlesFromSupabase(true, true).then(() => {
+                    btn.textContent = 'Load more';
+                    btn.disabled = false;
+                }).catch(() => {
+                    btn.textContent = 'Load more';
+                    btn.disabled = false;
+                });
+            } else {
+                renderArticles();
+            }
         }
 
         window.filterByTag = function(tag) {
@@ -827,7 +988,7 @@
                 activeCategories = [tag];
                 localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
                 setupFilters();
-                fetchArticlesFromSupabase();
+                fetchArticlesFromSupabase(true);
             }
             window.scrollTo({ top: 400, behavior: 'smooth' });
         }
@@ -1182,7 +1343,7 @@
                 <div class="state-panel">
                     <div class="state-title">Couldn't load the feed</div>
                     <div class="state-body">The connection to the news source failed. Check your connection and try again.</div>
-                    <button class="state-action" onclick="fetchArticlesFromSupabase()">Retry</button>
+                    <button class="state-action" onclick="fetchArticlesFromSupabase(true)">Retry</button>
                 </div>
             `;
             document.getElementById('load-more-btn').style.display = 'none';
@@ -1195,8 +1356,9 @@
             localStorage.setItem('newsLanguages', JSON.stringify(['All']));
             document.getElementById('search-box').value = '';
             document.getElementById('sort-box').value = 'newest';
+            updateSearchClearBtn();
             setupFilters();
-            fetchArticlesFromSupabase();
+            fetchArticlesFromSupabase(true);
         }
 
         function renderArticles() {
@@ -1222,7 +1384,8 @@
             }
 
             container.innerHTML = html;
-            document.getElementById('load-more-btn').style.display = (currentDisplayed < filteredData.length) ? 'block' : 'none';
+            const showLoadMore = currentDisplayed < filteredData.length || (hasMoreData && appendCount < MAX_APPENDS);
+            document.getElementById('load-more-btn').style.display = showLoadMore ? 'block' : 'none';
 
             if (showCarousel && itemsToRender.length >= 3) {
                 const carouselEl = document.getElementById('hero-carousel');
@@ -1237,8 +1400,12 @@
         }
 
         applyView(currentView);
-        fetchArticlesFromSupabase();
-        setInterval(fetchArticlesFromSupabase, 30 * 60 * 1000);
+        fetchArticlesFromSupabase(true);
+        setInterval(() => {
+            if (!document.hidden) {
+                fetchArticlesFromSupabase(true);
+            }
+        }, 60 * 60 * 1000);
     </script>
 </body>
 </html>
