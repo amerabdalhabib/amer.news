@@ -661,10 +661,24 @@
 
         function parseTags(item) {
             if (!item.tags) return [];
-            if (Array.isArray(item.tags)) return item.tags.filter(Boolean);
+            // Baserow Multi Select returns array of {id, value} objects
+            if (Array.isArray(item.tags)) {
+                return item.tags.map(t => {
+                    if (typeof t === 'string') return t;
+                    if (t && typeof t === 'object' && t.value) return t.value;
+                    return null;
+                }).filter(Boolean);
+            }
             try {
                 const parsed = JSON.parse(item.tags);
-                return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+                if (Array.isArray(parsed)) {
+                    return parsed.map(t => {
+                        if (typeof t === 'string') return t;
+                        if (t && typeof t === 'object' && t.value) return t.value;
+                        return null;
+                    }).filter(Boolean);
+                }
+                return [];
             } catch (e) {
                 return typeof item.tags === 'string' ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
             }
@@ -860,11 +874,12 @@
                     fetchPage++;
                 }
 
+                // Always fetch all data; filtering is done client-side for multi-select support
                 const queryParams = new URLSearchParams({
                     search: searchTerm,
-                    category: activeCategories[0] || 'All',
-                    source: activeSources[0] || 'All',
-                    language: activeLanguages[0] || 'All',
+                    category: 'All',
+                    source: 'All',
+                    language: 'All',
                     page: fetchPage.toString(),
                     size: FETCH_LIMIT.toString()
                 });
@@ -925,6 +940,21 @@
                 filteredData = filteredData.filter(item => {
                     const itemTags = parseTags(item);
                     return activeCategories.some(cat => itemTags.includes(cat));
+                });
+            }
+
+            // Client-side language filtering (Baserow Single Select returns language as a string)
+            if (!activeLanguages.includes('All')) {
+                filteredData = filteredData.filter(item => {
+                    const itemLang = item.language || '';
+                    return activeLanguages.some(lang => itemLang === lang);
+                });
+            }
+
+            // Client-side source filtering
+            if (!activeSources.includes('All')) {
+                filteredData = filteredData.filter(item => {
+                    return activeSources.includes(item.source_name);
                 });
             }
 
