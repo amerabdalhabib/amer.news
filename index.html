@@ -406,7 +406,7 @@
         </details>
 
         <div id="news-container" class="layout-grid-4" aria-live="polite"></div>
-        <button id="load-more-btn" class="load-more" onclick="loadMore()" style="display: none;">Load more</button>
+        <div id="scroll-sentinel" style="height:1px;"></div>
         <footer>Built with &#9829; by <a href="https://amerhabib.com/" target="_blank" rel="noopener">Amer Habib</a></footer>
     </div>
 
@@ -702,9 +702,6 @@
             if (isFetching) return;
             isFetching = true;
 
-            const btn = document.getElementById('load-more-btn');
-            if (btn && isLoadMoreCall) btn.textContent = 'Loading...';
-
             try {
                 const searchTerm = document.getElementById('search-box').value.trim();
                 const now = Date.now();
@@ -800,7 +797,6 @@
                 if (globalData.length === 0) renderErrorState();
             } finally {
                 isFetching = false;
-                if (btn) btn.textContent = 'Load more';
             }
         }
 
@@ -840,9 +836,9 @@
             renderArticles();
         }
 
-        window.loadMore = function() {
+        // Called by IntersectionObserver when sentinel scrolls into view
+        function infiniteScrollTrigger() {
             if (isFetching) return;
-            // Always fetch from the base for Load More — incremental server-side pagination
             fetchArticlesFromWorker(false, true);
         }
 
@@ -1032,12 +1028,10 @@
 
         function renderEmptyState() {
             document.getElementById('news-container').innerHTML = '<div class="state-panel"><div class="state-title">No articles match these filters</div><div class="state-body">Try a different topic, source, or language — or clear your search.</div><button class="state-action" onclick="resetFilters()">Clear filters</button></div>';
-            document.getElementById('load-more-btn').style.display = 'none';
         }
 
         function renderErrorState() {
             document.getElementById('news-container').innerHTML = '<div class="state-panel"><div class="state-title">Couldn\'t load the feed</div><div class="state-body">The connection to the news source failed. Check your connection and try again.</div><button class="state-action" onclick="fetchArticlesFromWorker(true)">Retry</button></div>';
-            document.getElementById('load-more-btn').style.display = 'none';
         }
 
         window.resetFilters = function() {
@@ -1068,7 +1062,7 @@
                 itemsToRender.forEach((item, idx) => html += buildCardHtml(item, idx));
             }
             container.innerHTML = html;
-            document.getElementById('load-more-btn').style.display = 'block';
+            // No load-more button — infinite scroll via IntersectionObserver
 
             if (showCarousel && itemsToRender.length >= 3) {
                 const carouselEl = document.getElementById('hero-carousel');
@@ -1078,6 +1072,18 @@
                 startCarouselTimer();
             }
         }
+
+        // INFINITE SCROLL — IntersectionObserver on the sentinel
+        const scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !isFetching) {
+                    infiniteScrollTrigger();
+                }
+            });
+        }, { rootMargin: '200px' });
+
+        const sentinel = document.getElementById('scroll-sentinel');
+        if (sentinel) scrollObserver.observe(sentinel);
 
         // INIT
         applyView(currentView);
