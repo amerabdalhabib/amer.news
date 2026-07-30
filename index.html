@@ -22,8 +22,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Amer.News</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <link rel="icon" type="image/jpeg" href="https://amerhabib.com/public/ah_icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -379,7 +377,7 @@
                         <button class="icon-btn" onclick="toggleSearch()" title="Search" aria-label="Search articles">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </button>
-                        <button class="icon-btn" onclick="fetchArticlesFromSupabase(true)" title="Refresh feed" aria-label="Refresh feed">
+                        <button class="icon-btn" onclick="fetchArticlesFromWorker(true)" title="Refresh feed" aria-label="Refresh feed">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                         </button>
                         <button id="theme-btn" class="icon-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode"></button>
@@ -517,11 +515,9 @@
 
     <script>
         // ==========================================
-        // SUPABASE CONNECTION
+        // CLOUDFLARE WORKER / BASEROW API INTERMEDIARY
         // ==========================================
-        const SUPABASE_URL = 'https://jwagtkzvhlidkbleraie.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3YWd0a3p2aGxpZGtibGVyYWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxODI5MjAsImV4cCI6MjA5OTc1ODkyMH0.HrYbyhxtCSNN5x8ZgySBtvs7cMjh94IACmGnIRbDU5Q';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const API_WORKER_URL = 'https://amernewsapi.amerhabib.workers.dev/';
 
         let globalData = [];
         let filteredData = [];
@@ -533,7 +529,7 @@
         const CACHE_TTL = 120000; // 2 minutes
 
         let lastAnyFetchTime = 0;
-        const MIN_FETCH_INTERVAL = 30000; // 30 seconds
+        const MIN_FETCH_INTERVAL = 10000; // 10 seconds
 
         let isFetching = false;
 
@@ -551,8 +547,8 @@
         let readArticles = safeParse(localStorage.getItem('readArticles'), []);
         let bookmarks = safeParse(localStorage.getItem('bookmarks'), []);
 
-        // For incremental loading from DB
-        let fetchOffset = 0;
+        // Pagination tracking
+        let fetchPage = 1;
         const FETCH_LIMIT = 100;
         let hasMoreData = true;
         let appendCount = 0;
@@ -565,10 +561,10 @@
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str)
-                .replace(/&/g, '&')
-                .replace(/</g, '<')
-                .replace(/>/g, '>')
-                .replace(/"/g, '"')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
         }
 
@@ -665,11 +661,12 @@
 
         function parseTags(item) {
             if (!item.tags) return [];
+            if (Array.isArray(item.tags)) return item.tags.filter(Boolean);
             try {
-                const parsed = typeof item.tags === 'string' ? JSON.parse(item.tags) : item.tags;
+                const parsed = JSON.parse(item.tags);
                 return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
             } catch (e) {
-                return typeof item.tags === 'string' ? [item.tags] : [];
+                return typeof item.tags === 'string' ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
             }
         }
 
@@ -712,7 +709,7 @@
         window.clearSearch = function() {
             document.getElementById('search-box').value = '';
             updateSearchClearBtn();
-            fetchArticlesFromSupabase(true);
+            fetchArticlesFromWorker(true);
             document.getElementById('search-box').focus();
         }
 
@@ -724,7 +721,7 @@
             localStorage.setItem('newsSources', JSON.stringify(['All']));
             localStorage.setItem('newsLanguages', JSON.stringify(['All']));
             setupFilters();
-            fetchArticlesFromSupabase(true);
+            fetchArticlesFromWorker(true);
             showToast("Filters cleared");
         }
 
@@ -779,7 +776,7 @@
             activeCategories = handleMultiSelect(btn.dataset.category, activeCategories, 'All');
             localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
             setupFilters();
-            fetchArticlesFromSupabase(true);
+            fetchArticlesFromWorker(true);
         });
 
         document.getElementById('source-filter-container').addEventListener('click', (e) => {
@@ -788,7 +785,7 @@
             activeSources = handleMultiSelect(btn.dataset.source, activeSources, 'All');
             localStorage.setItem('newsSources', JSON.stringify(activeSources));
             setupFilters();
-            fetchArticlesFromSupabase(true);
+            fetchArticlesFromWorker(true);
         });
 
         document.getElementById('lang-filter-container').addEventListener('click', (e) => {
@@ -797,14 +794,13 @@
             activeLanguages = handleMultiSelect(btn.dataset.lang, activeLanguages, 'All');
             localStorage.setItem('newsLanguages', JSON.stringify(activeLanguages));
             setupFilters();
-            fetchArticlesFromSupabase(true);
+            fetchArticlesFromWorker(true);
         });
 
         document.getElementById('search-box').addEventListener('input', () => {
             updateSearchClearBtn();
             clearTimeout(searchDebounce);
             searchDebounce = setTimeout(() => {
-                // Clear all filters when searching to search the whole database
                 activeCategories = ['All'];
                 activeSources = ['All'];
                 activeLanguages = ['All'];
@@ -812,20 +808,21 @@
                 localStorage.setItem('newsSources', JSON.stringify(['All']));
                 localStorage.setItem('newsLanguages', JSON.stringify(['All']));
                 setupFilters();
-                fetchArticlesFromSupabase(true);
+                fetchArticlesFromWorker(true);
             }, 400);
         });
         document.getElementById('sort-box').addEventListener('change', applyFiltersAndSort);
 
-        async function fetchArticlesFromSupabase(force, append = false) {
-            // Guard: prevent duplicate in-flight fetches
+        // ==========================================
+        // WORKER FETCH REPLACEMENT
+        // ==========================================
+        async function fetchArticlesFromWorker(force, append = false) {
             if (isFetching) return;
             isFetching = true;
 
             try {
                 const searchTerm = document.getElementById('search-box').value.trim();
 
-                // Aggressive rate limit: skip non-forced fetches within 30 seconds of any previous fetch
                 if (!force && lastAnyFetchTime > 0) {
                     const now = Date.now();
                     if ((now - lastAnyFetchTime) < MIN_FETCH_INTERVAL) {
@@ -841,10 +838,10 @@
                     sources: activeSources,
                     languages: activeLanguages,
                     search: searchTerm,
-                    categories: activeCategories
+                    categories: activeCategories,
+                    page: append ? fetchPage + 1 : 1
                 });
 
-                // Skip fetch if cached data is still fresh and filters haven't changed
                 if (!force && globalData.length > 0) {
                     const now = Date.now();
                     if (cacheKey === lastFetchKey && (now - lastFetchTime) < CACHE_TTL) {
@@ -855,79 +852,61 @@
                 }
 
                 if (!append) {
-                    if (isFetching) renderSkeletons(8);
-                    fetchOffset = 0;
+                    renderSkeletons(8);
+                    fetchPage = 1;
                     hasMoreData = true;
                     appendCount = 0;
+                } else {
+                    fetchPage++;
                 }
 
-                try {
-                    let query = supabaseClient
-                        .from('news_articles')
-                        .select('*')
-                        .order('published_at', { ascending: false })
-                        .range(fetchOffset, fetchOffset + FETCH_LIMIT - 1);
+                const queryParams = new URLSearchParams({
+                    search: searchTerm,
+                    category: activeCategories[0] || 'All',
+                    source: activeSources[0] || 'All',
+                    language: activeLanguages[0] || 'All',
+                    page: fetchPage.toString(),
+                    size: FETCH_LIMIT.toString()
+                });
 
-                    if (!activeSources.includes('All')) {
-                        query = query.in('source_name', activeSources);
-                    }
+                const response = await fetch(`${API_WORKER_URL}?${queryParams.toString()}`);
+                if (!response.ok) {
+                    throw new Error(`Worker API HTTP status: ${response.status}`);
+                }
 
-                    if (!activeLanguages.includes('All')) {
-                        query = query.in('language', activeLanguages);
-                    }
+                const newData = await response.json();
+                hasMoreData = newData.length === FETCH_LIMIT;
 
-                    if (searchTerm) {
-                        query = query.or(`title.ilike.%${searchTerm}%,summary.ilike.%${searchTerm}%`);
-                    }
+                if (append && globalData.length > 0) {
+                    const existingUrls = new Set(globalData.map(d => d.url));
+                    const uniqueNew = newData.filter(d => !existingUrls.has(d.url));
+                    globalData = [...globalData, ...uniqueNew];
+                    appendCount++;
+                } else {
+                    globalData = newData;
+                }
 
-                    // Server-side category filtering via JSONB contains
-                    if (!activeCategories.includes('All')) {
-                        query = query.contains('tags', activeCategories);
-                    }
+                lastFetchKey = cacheKey;
+                lastFetchTime = Date.now();
+                lastAnyFetchTime = Date.now();
 
-                    const { data, error } = await query;
-                    if (error) throw error;
-
-                    const newData = data || [];
-                    hasMoreData = newData.length === FETCH_LIMIT;
-
-                    if (append && globalData.length > 0) {
-                        // Merge: append new data, avoiding duplicates by URL
-                        const existingUrls = new Set(globalData.map(d => d.url));
-                        const uniqueNew = newData.filter(d => !existingUrls.has(d.url));
-                        globalData = [...globalData, ...uniqueNew];
-                        appendCount++;
-                    } else {
-                        globalData = newData;
-                    }
-
-                    fetchOffset += FETCH_LIMIT;
-                    lastFetchKey = cacheKey;
-                    lastFetchTime = Date.now();
-                    lastAnyFetchTime = Date.now();
-
-                    if (globalData.length > 0) {
-                        setupFilters();
-                        renderTicker(globalData.slice(0, 12));
-                    } else {
-                        document.getElementById('ticker-bar').style.display = 'none';
-                    }
-
-                    document.getElementById('sort-box').value =
-                        (activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All') && !searchTerm) ? 'newest' : document.getElementById('sort-box').value;
-
-                    // Don't reset currentDisplayed when appending
-                    if (!append) {
-                        currentDisplayed = itemsPerPage;
-                    }
-                    applyFiltersAndSort();
-                    setTimeout(positionSegSlider, 50);
-
-                } catch (error) {
-                    console.error("Supabase Error:", error);
+                if (globalData.length > 0) {
+                    setupFilters();
+                    renderTicker(globalData.slice(0, 12));
+                } else {
                     document.getElementById('ticker-bar').style.display = 'none';
-                    if (!append) renderErrorState();
                 }
+
+                if (!append) {
+                    currentDisplayed = itemsPerPage;
+                }
+                applyFiltersAndSort();
+                setTimeout(positionSegSlider, 50);
+
+            } catch (error) {
+                console.error("Worker API Error:", error);
+                document.getElementById('ticker-bar').style.display = 'none';
+                if (!append) renderErrorState();
             } finally {
                 isFetching = false;
             }
@@ -942,8 +921,6 @@
                 filteredData = filteredData.filter(item => bookmarks.includes(item.url));
             }
 
-            // No need to filter by categories here — now done server-side in fetchArticlesFromSupabase
-            // But keep as safety net for already-loaded data
             if (!activeCategories.includes('All')) {
                 filteredData = filteredData.filter(item => {
                     const itemTags = parseTags(item);
@@ -957,7 +934,6 @@
                 filteredData.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
             }
 
-            // Don't reset currentDisplayed here — it's managed by loadMore
             renderArticles();
         }
 
@@ -966,12 +942,11 @@
 
             currentDisplayed += itemsPerPage;
 
-            // If we've exhausted the filtered data and there might be more in the DB, fetch more
             if (currentDisplayed >= filteredData.length && hasMoreData && appendCount < MAX_APPENDS) {
                 const btn = document.getElementById('load-more-btn');
                 btn.textContent = 'Loading more...';
                 btn.disabled = true;
-                fetchArticlesFromSupabase(true, true).then(() => {
+                fetchArticlesFromWorker(true, true).then(() => {
                     btn.textContent = 'Load more';
                     btn.disabled = false;
                 }).catch(() => {
@@ -988,7 +963,7 @@
                 activeCategories = [tag];
                 localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
                 setupFilters();
-                fetchArticlesFromSupabase(true);
+                fetchArticlesFromWorker(true);
             }
             window.scrollTo({ top: 400, behavior: 'smooth' });
         }
@@ -1343,7 +1318,7 @@
                 <div class="state-panel">
                     <div class="state-title">Couldn't load the feed</div>
                     <div class="state-body">The connection to the news source failed. Check your connection and try again.</div>
-                    <button class="state-action" onclick="fetchArticlesFromSupabase(true)">Retry</button>
+                    <button class="state-action" onclick="fetchArticlesFromWorker(true)">Retry</button>
                 </div>
             `;
             document.getElementById('load-more-btn').style.display = 'none';
@@ -1358,7 +1333,7 @@
             document.getElementById('sort-box').value = 'newest';
             updateSearchClearBtn();
             setupFilters();
-            fetchArticlesFromSupabase(true);
+            fetchArticlesFromWorker(true);
         }
 
         function renderArticles() {
@@ -1400,10 +1375,10 @@
         }
 
         applyView(currentView);
-        fetchArticlesFromSupabase(true);
+        fetchArticlesFromWorker(true);
         setInterval(() => {
             if (!document.hidden) {
-                fetchArticlesFromSupabase(true);
+                fetchArticlesFromWorker(true);
             }
         }, 60 * 60 * 1000);
     </script>
