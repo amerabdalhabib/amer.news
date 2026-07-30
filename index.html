@@ -156,40 +156,23 @@
 
         /* ---------- Layout containers ---------- */
         .layout-grid-1 { display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; }
-        
         .layout-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; }
         .layout-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; width: 100%; }
         .layout-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; }
-        
         .layout-list { display: flex; flex-direction: column; gap: 15px; width: 100%; }
         .layout-text { display: flex; flex-direction: column; gap: 0; max-width: 900px; margin: 0 auto; }
 
-        @media (max-width: 767px) {
-            .layout-grid-2, .layout-grid-3, .layout-grid-4 { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 767px) { .layout-grid-2, .layout-grid-3, .layout-grid-4 { grid-template-columns: 1fr; } }
 
         /* ---------- Masonry / Newspaper Layout ---------- */
         .layout-masonry { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
-        @media (min-width: 768px) {
-            .layout-masonry { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (min-width: 1024px) {
-            .layout-masonry { grid-template-columns: repeat(3, 1fr); }
-        }
-        .layout-masonry .news-card.span-2 {
-            grid-column: span 1;
-        }
-        @media (min-width: 768px) {
-            .layout-masonry .news-card.span-2 {
-                grid-column: span 2;
-            }
-        }
+        @media (min-width: 768px) { .layout-masonry { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .layout-masonry { grid-template-columns: repeat(3, 1fr); } }
+        .layout-masonry .news-card.span-2 { grid-column: span 1; }
+        @media (min-width: 768px) { .layout-masonry .news-card.span-2 { grid-column: span 2; } }
 
-        /* ---------- Card ---------- */
         .news-card { display: flex; flex-direction: column; padding: 0; }
         .news-card.read { opacity: 0.55; }
-
-        /* Missing image card styling for masonry */
         .news-card.no-image-card { background: var(--ink); color: var(--paper); padding: 20px; border-radius: var(--radius); display: flex; flex-direction: column; justify-content: flex-start; }
         .news-card.no-image-card .news-title { color: var(--paper); font-size: 1.15rem; }
         .news-card.no-image-card .news-title:hover { color: var(--wire); }
@@ -199,25 +182,19 @@
         .news-card.no-image-card .bookmark-btn, .news-card.no-image-card .share-btn { color: var(--paper); }
         .news-card.no-image-card .bookmark-btn:hover, .news-card.no-image-card .share-btn:hover { background: rgba(255,255,255,0.15); color: var(--wire); }
 
-        /* Standard grid / list layout cropping to fit grid */
         .card-image-wrap { position: relative; display: block; width: 100%; aspect-ratio: 16/10; background: var(--paper-raised); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
         .news-image { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--paper-raised); }
-
-        /* Masonry specific image handling: fill width, crop and align center, center */
         .layout-masonry .card-image-wrap { aspect-ratio: 16/10; background: transparent; }
         .layout-masonry .news-image { width: 100%; height: 100%; object-fit: cover; object-position: center center; display: block; background: transparent; }
-
         .no-image-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
         .news-content { display: flex; flex-direction: column; flex: 1; }
         .content-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .bookmark-wrap { display: none; }
-
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
         .tags-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .tag { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; padding: 3px 8px; border-radius: 3px; cursor: pointer; border: 1px solid var(--line); background: var(--paper-raised); color: var(--ink-muted); display: inline-block; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
         .tag:hover { border-color: var(--wire); color: var(--wire); }
-
         .card-actions-group { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
         .bookmark-btn, .share-btn { background: none; border: none; cursor: pointer; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius); padding: 0; flex-shrink: 0; }
         .bookmark-btn:hover, .share-btn:hover { background: var(--wire-soft); color: var(--wire); }
@@ -225,29 +202,20 @@
 
         .news-title { display: block; color: var(--ink); text-decoration: none; font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; line-height: 1.25; margin-bottom: 8px; }
         .news-title.bn-title { font-size: calc(1.05rem * 0.9); }
-        @media (min-width: 768px) { 
-            .news-title { font-size: 1.15rem; } 
-            .news-title.bn-title { font-size: calc(1.15rem * 0.9); }
-        }
+        @media (min-width: 768px) { .news-title { font-size: 1.15rem; } .news-title.bn-title { font-size: calc(1.15rem * 0.9); } }
         .news-title:hover { color: var(--wire); }
-
         .snippet { font-size: 0.8rem; color: var(--ink-muted); margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; }
         @media (min-width: 768px) { .snippet { font-size: 0.85rem; } }
-
         .meta { color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.7rem; display: flex; align-items: center; gap: 10px; margin-top: auto; flex-wrap: wrap; }
         .text-only-tags { display: none; gap: 6px; align-items: center; }
 
-        /* Masonry custom meta placement (right below summary, no bottom gap stretch) */
         .layout-masonry .news-card { justify-content: flex-start; }
         .layout-masonry .news-card .news-content { flex: 0 0 auto; }
         .layout-masonry .news-card .meta { margin-top: 4px; margin-bottom: 0; flex-grow: 0; }
 
         .layout-list .news-card { flex-direction: row; gap: 20px; align-items: flex-start; padding-bottom: 15px; border-bottom: 1px solid var(--line); width: 100%; }
         .layout-list .card-image-wrap { width: 240px; aspect-ratio: 16/10; flex-shrink: 0; margin-bottom: 0; }
-        @media (max-width: 767px) {
-            .layout-list .news-card { flex-direction: column; gap: 0; }
-            .layout-list .card-image-wrap { width: 100%; margin-bottom: 12px; }
-        }
+        @media (max-width: 767px) { .layout-list .news-card { flex-direction: column; gap: 0; } .layout-list .card-image-wrap { width: 100%; margin-bottom: 12px; } }
         .layout-list .news-content { flex-direction: row; justify-content: space-between; width: 100%; }
         .layout-list .card-header .card-actions-group { display: none; }
         .layout-list .bookmark-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 15px; }
@@ -263,17 +231,14 @@
         .layout-text .text-only-tags { display: inline-flex; }
         .layout-text .bookmark-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 15px; }
 
-        /* ---------- Hero carousel ---------- */
         .hero-carousel { grid-column: 1 / -1; position: relative; height: 50vh; border-radius: var(--radius); overflow: hidden; margin-bottom: 4px; background: var(--paper-raised); touch-action: pan-y; width: 100%; }
         .carousel-slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
         .carousel-slide.active { opacity: 1; pointer-events: auto; }
-
         .hero-full-link { position: absolute; inset: 0; z-index: 10; }
         .carousel-slide .card-image-wrap { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; margin: 0; border-radius: 0; z-index: 1; }
         .carousel-slide .news-image { width: 100%; height: 100%; object-fit: cover; max-height: none; }
         .carousel-slide .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 25%, rgba(0,0,0,0.88) 100%); z-index: 2; }
         .wire-stamp { position: absolute; top: 14px; left: 14px; z-index: 12; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; color: #fff; background: var(--wire); padding: 4px 10px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.06em; pointer-events: none; }
-
         .carousel-slide .news-content { position: relative; z-index: 11; padding: 20px; padding-top: 40px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; pointer-events: none; height: 100%; }
         .carousel-slide .news-content a, .carousel-slide .news-content button { pointer-events: auto; }
         .carousel-slide .tag { background: rgba(255,255,255,0.15); border: none; color: #fff; width: fit-content; }
@@ -283,20 +248,15 @@
         .carousel-slide .snippet { display: none; }
         .carousel-slide .meta, .carousel-slide .bookmark-btn { color: #d4d4d8; }
         .carousel-slide .bookmark-btn:hover { color: #fff; background: rgba(255,255,255,0.15); }
-
         .carousel-progress-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--wire); width: 0%; z-index: 25; transition: width linear; }
         .carousel-slide.active .carousel-progress-bar { width: 100%; transition-duration: 5s; }
-
         .carousel-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 20; background: rgba(0,0,0,0.35); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .carousel-nav:hover { background: rgba(0,0,0,0.6); }
-        .carousel-nav.prev { left: 12px; }
-        .carousel-nav.next { right: 12px; }
+        .carousel-nav.prev { left: 12px; } .carousel-nav.next { right: 12px; }
         @media (max-width: 639px) { .carousel-nav { display: none; } }
-
         .carousel-dots { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 7px; z-index: 20; }
         .dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; }
         .dot.active { background: #fff; transform: scale(1.25); }
-
         @media (min-width: 768px) {
             .carousel-slide .news-content { flex-direction: row; align-items: flex-end; justify-content: space-between; padding: 36px; gap: 30px; }
             .carousel-slide .content-main { flex: 1; max-width: 66%; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; }
@@ -305,7 +265,6 @@
             .carousel-slide .bookmark-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; margin-left: 0; }
         }
 
-        /* ---------- Skeletons / empty / error states ---------- */
         .skeleton-card { display: flex; flex-direction: column; }
         .skeleton-block { background: linear-gradient(90deg, var(--paper-raised) 25%, var(--line) 50%, var(--paper-raised) 75%); background-size: 200% 100%; animation: shimmer 1.4s ease infinite; border-radius: var(--radius); }
         @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
@@ -319,20 +278,17 @@
         .state-action { display: inline-flex; align-items: center; gap: 6px; background: var(--ink); color: var(--paper); border: none; padding: 9px 16px; border-radius: var(--radius); font-weight: 600; font-size: 0.85rem; cursor: pointer; }
         .state-action:hover { background: var(--wire); }
 
-        /* ---------- Footer / misc ---------- */
         .load-more { display: block; width: 100%; padding: 13px; margin-top: 30px; background: var(--paper-raised); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); font-weight: 600; cursor: pointer; font-size: 0.9rem; }
         .load-more:hover { border-color: var(--wire); color: var(--wire); }
 
         footer { text-align: center; padding: 40px 0; margin-top: 30px; color: var(--ink-muted); font-size: 0.85rem; }
         footer a { color: var(--ink); text-decoration: underline; font-weight: 500; }
 
-        /* ---------- Floating Quick Buttons Stack ---------- */
         .floating-stack { position: fixed; bottom: 22px; right: 18px; display: flex; flex-direction: column; gap: 10px; z-index: 50; }
         .floating-btn { background: var(--ink); color: var(--paper); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
         .floating-btn:hover { background: var(--wire); }
         #back-to-top { display: none; }
 
-        /* ---------- Login modal ---------- */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 16px; }
         .modal-content { background: var(--paper); width: 100%; max-width: 360px; padding: 24px; border-radius: calc(var(--radius) * 2); box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; border: 1px solid var(--line); }
         .close-modal { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--ink-muted); cursor: pointer; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
@@ -343,8 +299,7 @@
         .form-group input { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-raised); color: var(--ink); font-family: inherit; font-size: 0.95rem; }
         .modal-btn { width: 100%; padding: 11px; background: var(--ink); color: var(--paper); border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer; margin-top: 8px; }
         .modal-btn:hover { background: var(--wire); }
-        
-        /* Toast Notification Styling */
+
         .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--paper); padding: 8px 16px; border-radius: var(--radius); font-size: 0.85rem; font-family: var(--font-mono); opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 3000; pointer-events: none; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     </style>
@@ -354,10 +309,8 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-8X1572S1X5');
 </script>
-    
 </head>
 <body>
     <div class="sticky-wrapper">
@@ -371,7 +324,6 @@
                             <span class="masthead-tag">Wire desk</span>
                         </div>
                     </a>
-
                     <div class="utility-zone">
                         <div id="live-datetime" class="live-clock"></div>
                         <button class="icon-btn" onclick="toggleSearch()" title="Search" aria-label="Search articles">
@@ -386,7 +338,6 @@
                         </button>
                     </div>
                 </div>
-
                 <div id="search-container">
                     <div class="search-wrapper">
                         <input type="text" id="search-box" class="search-box" placeholder="Search..." aria-label="Search articles">
@@ -396,7 +347,6 @@
                     </div>
                 </div>
             </header>
-
             <div id="ticker-bar" class="ticker-bar" style="display:none;">
                 <div class="ticker-live"><span class="ticker-dot"></span>Live</div>
                 <div class="ticker-viewport">
@@ -413,37 +363,21 @@
                 <option value="oldest">Sort: Oldest</option>
                 <option value="bookmarks">View: Saved</option>
             </select>
-
             <div class="layout-segmented" id="layout-segmented">
                 <div class="seg-slider" id="seg-slider"></div>
-                <button class="seg-btn" data-view="grid-1" title="1 column" aria-label="1 column view">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1"/></svg>
-                </button>
-                <button class="seg-btn" data-view="grid-2" title="2 columns" aria-label="2 column grid view">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
-                </button>
-                <button class="seg-btn" data-view="grid-3" title="3 columns" aria-label="3 column grid view">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/></svg>
-                </button>
-                <button class="seg-btn active" data-view="grid-4" title="4 columns" aria-label="4 column grid view">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="3.5" height="18" rx="1"/><rect x="7.5" y="3" width="3.5" height="18" rx="1"/><rect x="13" y="3" width="3.5" height="18" rx="1"/><rect x="18.5" y="3" width="3.5" height="18" rx="1"/></svg>
-                </button>
-                <button class="seg-btn" data-view="masonry" title="Newspaper layout" aria-label="Newspaper layout view">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
-                </button>
-                <button class="seg-btn" data-view="list" title="List view" aria-label="List view">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                </button>
-                <button class="seg-btn" data-view="text" title="Text view" aria-label="Compact text view">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                </button>
+                <button class="seg-btn" data-view="grid-1" title="1 column"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1"/></svg></button>
+                <button class="seg-btn" data-view="grid-2" title="2 columns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></button>
+                <button class="seg-btn" data-view="grid-3" title="3 columns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/></svg></button>
+                <button class="seg-btn active" data-view="grid-4" title="4 columns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="3.5" height="18" rx="1"/><rect x="7.5" y="3" width="3.5" height="18" rx="1"/><rect x="13" y="3" width="3.5" height="18" rx="1"/><rect x="18.5" y="3" width="3.5" height="18" rx="1"/></svg></button>
+                <button class="seg-btn" data-view="masonry" title="Newspaper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></button>
+                <button class="seg-btn" data-view="list" title="List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+                <button class="seg-btn" data-view="text" title="Compact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
             </div>
         </div>
 
         <details class="filter-accordion" id="filter-details">
             <summary>Customise your feed</summary>
-
-             <div class="filter-group">
+            <div class="filter-group">
                 <span class="filter-label">Language</span>
                 <div id="lang-filter-container" class="filter-bar">
                     <button class="capsule active" data-lang="All">Both</button>
@@ -451,21 +385,18 @@
                     <button class="capsule" data-lang="Bangla">Bangla</button>
                 </div>
             </div>
-
             <div class="filter-group">
                 <span class="filter-label">Topics</span>
                 <div id="filter-container" class="filter-bar">
                     <button class="capsule active" data-category="All">All topics</button>
                 </div>
             </div>
-
             <div class="filter-group">
                 <span class="filter-label">News sources</span>
                 <div id="source-filter-container" class="filter-bar">
                     <button class="capsule active" data-source="All">All sources</button>
                 </div>
             </div>
-
             <div class="filter-group" style="margin-top: 6px;">
                 <button class="clear-filters-btn" onclick="clearAllFilters()" title="Reset all filters to default">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -475,39 +406,27 @@
         </details>
 
         <div id="news-container" class="layout-grid-4" aria-live="polite"></div>
-
         <button id="load-more-btn" class="load-more" onclick="loadMore()" style="display: none;">Load more</button>
-
-        <footer>
-            Built with &#9829; by <a href="https://amerhabib.com/" target="_blank" rel="noopener">Amer Habib</a>
-        </footer>
+        <footer>Built with &#9829; by <a href="https://amerhabib.com/" target="_blank" rel="noopener">Amer Habib</a></footer>
     </div>
 
     <div class="floating-stack" id="floating-stack">
-        <button id="floating-filter-toggle" class="floating-btn" onclick="toggleFilterAccordion()" title="Customize feed" aria-label="Toggle customisation filter drawer">
+        <button id="floating-filter-toggle" class="floating-btn" onclick="toggleFilterAccordion()" title="Customize feed">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
         </button>
-        <button id="back-to-top" class="floating-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Back to top" aria-label="Back to top">
+        <button id="back-to-top" class="floating-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Back to top">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
         </button>
     </div>
-
     <div id="toast" class="toast">Link copied to clipboard!</div>
-
     <div id="login-modal" class="modal-overlay">
         <div class="modal-content" onclick="event.stopPropagation()">
             <button class="close-modal" onclick="document.getElementById('login-modal').style.display='none'" aria-label="Close">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
             <div class="modal-title">Sign in to Amer.News</div>
-            <div class="form-group">
-                <label for="login-email">Email address</label>
-                <input id="login-email" type="email" placeholder="you@example.com">
-            </div>
-            <div class="form-group">
-                <label for="login-password">Password</label>
-                <input id="login-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
-            </div>
+            <div class="form-group"><label for="login-email">Email address</label><input id="login-email" type="email" placeholder="you@example.com"></div>
+            <div class="form-group"><label for="login-password">Password</label><input id="login-password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"></div>
             <button class="modal-btn" onclick="alert('Backend integration coming soon!')">Sign in</button>
             <p style="text-align:center; font-size: 0.75rem; margin-top:15px; color:var(--ink-muted);">This feature is currently in development.</p>
         </div>
@@ -518,20 +437,17 @@
         // CLOUDFLARE WORKER / BASEROW API INTERMEDIARY
         // ==========================================
         const API_WORKER_URL = 'https://amernewsapi.amerhabib.workers.dev/';
-
         let globalData = [];
         let filteredData = [];
         const itemsPerPage = 23;
         let currentDisplayed = itemsPerPage;
 
-        let lastFetchTime = 0;
-        let lastFetchKey = '';
-        const CACHE_TTL = 120000; // 2 minutes
-
-        let lastAnyFetchTime = 0;
-        const MIN_FETCH_INTERVAL = 10000; // 10 seconds
+        const CACHE_KEY = 'amernews_data';
+        const CACHE_TIME_KEY = 'amernews_time';
+        const CACHE_TTL = 3 * 60 * 1000;
 
         let isFetching = false;
+        let fetchPageNum = 1; // Server page tracker for incremental Load More
 
         let activeCategories = safeParse(localStorage.getItem('newsCategories'), ['All']);
         let activeSources = safeParse(localStorage.getItem('newsSources'), ['All']);
@@ -539,45 +455,22 @@
         let currentView = localStorage.getItem('newsView') || (window.innerWidth < 768 ? 'grid-2' : 'grid-4');
         let searchDebounce = null;
 
-        let carouselInterval;
-        let currentSlide = 0;
-        let carouselTotal = 0;
-        let touchStartX = null;
-
+        let carouselInterval, currentSlide = 0, carouselTotal = 0, touchStartX = null;
         let readArticles = safeParse(localStorage.getItem('readArticles'), []);
         let bookmarks = safeParse(localStorage.getItem('bookmarks'), []);
 
-        // Pagination tracking
-        let fetchPage = 1;
-        const FETCH_LIMIT = 100;
-        let hasMoreData = true;
-        let appendCount = 0;
-        const MAX_APPENDS = 3;
-
-        function safeParse(str, fallback) {
-            try { const v = JSON.parse(str); return Array.isArray(v) ? v : fallback; } catch (e) { return fallback; }
-        }
+        function safeParse(str, fallback) { try { const v = JSON.parse(str); return Array.isArray(v) ? v : fallback; } catch (e) { return fallback; } }
 
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+            return String(str).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, '&#39;');
         }
 
-        function isBanglaText(str) {
-            if (!str) return false;
-            return /[\u0980-\u09FF]/.test(str);
-        }
+        function isBanglaText(str) { return str ? /[\u0980-\u09FF]/.test(str) : false; }
 
         function hashId(str) {
             let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = (hash * 31 + str.charCodeAt(i)) | 0;
-            }
+            for (let i = 0; i < str.length; i++) hash = (hash * 31 + str.charCodeAt(i)) | 0;
             return 'c' + Math.abs(hash).toString(36);
         }
 
@@ -589,22 +482,19 @@
 
         function updateClock() {
             const now = new Date();
-            const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' };
-            document.getElementById('live-datetime').innerText = now.toLocaleDateString('en-US', options);
+            document.getElementById('live-datetime').innerText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' });
         }
         setInterval(updateClock, 60000); updateClock();
 
         function setupThemeIcon() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            document.getElementById('theme-btn').innerHTML = isDark ? svgSun : svgMoon;
+            document.getElementById('theme-btn').innerHTML = document.documentElement.getAttribute('data-theme') === 'dark' ? svgSun : svgMoon;
         }
         setupThemeIcon();
 
         window.toggleTheme = function() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const target = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', target);
-            localStorage.setItem('theme', target);
+            const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('theme', t);
             setupThemeIcon();
         }
 
@@ -612,142 +502,75 @@
             const el = document.getElementById('search-container');
             const show = el.style.display !== 'block';
             el.style.display = show ? 'block' : 'none';
-            if (show) {
-                document.getElementById('search-box').focus();
-                updateSearchClearBtn();
-            }
+            if (show) { document.getElementById('search-box').focus(); updateSearchClearBtn(); }
         }
 
         window.toggleModal = function(id) { document.getElementById(id).style.display = 'flex'; }
-        document.getElementById('login-modal').addEventListener('click', function(e) {
-            if (e.target === this) this.style.display = 'none';
-        });
+        document.getElementById('login-modal').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
 
-        window.addEventListener('scroll', () => {
-            const scrolled = window.scrollY > 400;
-            document.getElementById('back-to-top').style.display = scrolled ? 'flex' : 'none';
-        });
+        window.addEventListener('scroll', () => { document.getElementById('back-to-top').style.display = window.scrollY > 400 ? 'flex' : 'none'; });
 
         window.toggleFilterAccordion = function() {
             const details = document.getElementById('filter-details');
             details.open = !details.open;
-            if (details.open) {
-                const elementPosition = details.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - 90;
-                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-            }
+            if (details.open) window.scrollTo({ top: details.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' });
         }
 
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.innerText = message;
-            toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 2200);
-        }
+        function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
 
         function getRelativeTime(dateStr) {
             if (!dateStr) return '';
-            const diffSecs = Math.floor((new Date() - new Date(dateStr)) / 1000);
-            const diffMins = Math.floor(diffSecs / 60);
-            const diffHours = Math.floor(diffMins / 60);
-            const diffDays = Math.floor(diffHours / 24);
-
-            if (diffSecs < 60) return "Just now";
-            if (diffMins < 60) return `${diffMins} min ago`;
-            if (diffHours < 24) return `${diffHours} hr ago`;
-            if (diffDays === 1) return "Yesterday";
-            return `${diffDays} days ago`;
+            const d = Math.floor((new Date() - new Date(dateStr)) / 1000);
+            if (d < 60) return "Just now";
+            const m = Math.floor(d / 60);
+            if (m < 60) return m + " min ago";
+            const h = Math.floor(m / 60);
+            if (h < 24) return h + " hr ago";
+            const days = Math.floor(h / 24);
+            return days === 1 ? "Yesterday" : days + " days ago";
         }
 
         function parseTags(item) {
-            try {
-                if (!item || !item.tags) return [];
-                let raw = item.tags;
-                // Already an array of strings or {id, value} objects
-                if (Array.isArray(raw)) {
-                    return raw.map(t => {
-                        if (typeof t === 'string') return t;
-                        if (t && typeof t === 'object' && t.value) return t.value;
-                        return null;
-                    }).filter(Boolean);
-                }
-                // String: try JSON parse, then comma-separated fallback
-                if (typeof raw === 'string') {
-                    raw = raw.trim();
-                    if (!raw) return [];
-                    try {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed)) {
-                            return parsed.map(t => {
-                                if (typeof t === 'string') return t;
-                                if (t && typeof t === 'object' && t.value) return t.value;
-                                return null;
-                            }).filter(Boolean);
-                        }
-                        // Single string value
-                        if (typeof parsed === 'string') {
-                            return [parsed];
-                        }
-                        return [];
-                    } catch (e) {
-                        // Not valid JSON: try comma-separated
-                        const parts = raw.split(',').map(t => t.trim()).filter(Boolean);
-                        return parts.length ? parts : [raw];
-                    }
-                }
-                return [];
-            } catch (e) {
-                return [];
+            if (!item || !item.tags) return [];
+            let raw = item.tags;
+            if (Array.isArray(raw)) return raw.map(t => typeof t === 'string' ? t : (t && t.value) || (t && t.name) || null).filter(Boolean);
+            if (typeof raw === 'string') {
+                raw = raw.trim(); if (!raw) return [];
+                try { const p = JSON.parse(raw.replace(/'/g, '"')); return Array.isArray(p) ? p.map(t => typeof t === 'string' ? t : (t && t.value) || (t && t.name) || null).filter(Boolean) : (typeof p === 'string' ? [p] : []); }
+                catch (e) { const parts = raw.replace(/[\[\]{}"']/g, '').split(',').map(t => t.trim()).filter(Boolean); return parts.length ? parts : [raw]; }
             }
+            return [];
         }
 
         function applyView(viewType) {
-            if (viewType === 'masonry' && window.innerWidth < 768) {
-                viewType = 'grid-2';
-            }
+            if (viewType === 'masonry' && window.innerWidth < 768) viewType = 'grid-2';
             currentView = viewType;
             localStorage.setItem('newsView', viewType);
-            document.getElementById('news-container').className = `layout-${viewType}`;
-
-            document.querySelectorAll('.seg-btn').forEach(btn => {
-                const active = btn.dataset.view === viewType;
-                btn.classList.toggle('active', active);
-            });
+            document.getElementById('news-container').className = 'layout-' + viewType;
+            document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.dataset.view === viewType));
             positionSegSlider();
             renderArticles();
         }
 
         function positionSegSlider() {
-            const activeBtn = document.querySelector('.seg-btn.active');
-            const slider = document.getElementById('seg-slider');
-            if (activeBtn && slider && window.getComputedStyle(activeBtn).display !== 'none') {
-                slider.style.width = activeBtn.offsetWidth + 'px';
-                slider.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
-            }
+            const a = document.querySelector('.seg-btn.active'), s = document.getElementById('seg-slider');
+            if (a && s && window.getComputedStyle(a).display !== 'none') { s.style.width = a.offsetWidth + 'px'; s.style.transform = 'translateX(' + a.offsetLeft + 'px)'; }
         }
         window.addEventListener('resize', positionSegSlider);
 
-        document.getElementById('layout-segmented').addEventListener('click', (e) => {
-            const btn = e.target.closest('.seg-btn');
-            if (btn) applyView(btn.dataset.view);
-        });
+        document.getElementById('layout-segmented').addEventListener('click', e => { const b = e.target.closest('.seg-btn'); if (b) applyView(b.dataset.view); });
 
-        function updateSearchClearBtn() {
-            const val = document.getElementById('search-box').value;
-            document.getElementById('search-clear-btn').style.display = val ? 'flex' : 'none';
-        }
+        function updateSearchClearBtn() { document.getElementById('search-clear-btn').style.display = document.getElementById('search-box').value ? 'flex' : 'none'; }
 
         window.clearSearch = function() {
             document.getElementById('search-box').value = '';
             updateSearchClearBtn();
-            fetchArticlesFromWorker(true);
+            applyFiltersAndSort();
             document.getElementById('search-box').focus();
         }
 
         window.clearAllFilters = function() {
-            activeCategories = ['All'];
-            activeSources = ['All'];
-            activeLanguages = ['All'];
+            activeCategories = ['All']; activeSources = ['All']; activeLanguages = ['All'];
             localStorage.setItem('newsCategories', JSON.stringify(['All']));
             localStorage.setItem('newsSources', JSON.stringify(['All']));
             localStorage.setItem('newsLanguages', JSON.stringify(['All']));
@@ -756,185 +579,210 @@
             showToast("Filters cleared");
         }
 
-        function setupFilters(dataSource) {
-            // Use provided data source, or fall back to globalData
-            const sourceData = dataSource || globalData;
+        function computeContextualTags() {
+            const tags = new Set();
+            globalData.forEach(item => {
+                const itemLang = isBanglaText(item.title) ? 'Bangla' : 'English';
+                if (!activeLanguages.includes('All') && !activeLanguages.includes(itemLang)) return;
+                const src = item.source_name || 'Unknown';
+                if (!activeSources.includes('All') && !activeSources.includes(src)) return;
+                parseTags(item).forEach(t => { if (t && t !== item.source_name) tags.add(t); });
+            });
+            return Array.from(tags).sort();
+        }
 
-            const tagContainer = document.getElementById('filter-container');
-            const tagsSet = new Set();
-            sourceData.forEach(item => {
-                try {
-                    parseTags(item).forEach(t => { if (t && t !== item.source_name) tagsSet.add(t); });
-                } catch (e) {
-                    // Silently skip problematic items
+        function computeContextualSources() {
+            const sources = new Set();
+            globalData.forEach(item => {
+                const itemLang = isBanglaText(item.title) ? 'Bangla' : 'English';
+                if (!activeLanguages.includes('All') && !activeLanguages.includes(itemLang)) return;
+                if (!activeCategories.includes('All')) {
+                    const itemTags = parseTags(item);
+                    if (!activeCategories.some(cat => itemTags.includes(cat))) return;
                 }
+                if (item.source_name) sources.add(item.source_name);
+            });
+            return Array.from(sources).sort();
+        }
+
+        function setupFilters() {
+            const contextualTags = computeContextualTags();
+            const tagContainer = document.getElementById('filter-container');
+            tagContainer.innerHTML = '<button class="capsule ' + (activeCategories.includes('All') ? 'active' : '') + '" data-category="All">All topics</button>';
+            contextualTags.forEach(cat => {
+                tagContainer.innerHTML += '<button class="capsule ' + (activeCategories.includes(cat) ? 'active' : '') + '" data-category="' + escapeHtml(cat) + '">' + escapeHtml(cat) + '</button>';
             });
 
-            // Debug: log first item's tags to help diagnose
-            if (sourceData.length > 0 && typeof console !== 'undefined') {
-                console.log('First item tags field:', sourceData[0].tags, typeof sourceData[0].tags);
-                console.log('Parsed tags:', parseTags(sourceData[0]));
-            }
-
-            tagContainer.innerHTML = `<button class="capsule ${activeCategories.includes('All') ? 'active' : ''}" data-category="All">All topics</button>`;
-            Array.from(tagsSet).sort().forEach(cat => {
-                const isActive = activeCategories.includes(cat);
-                tagContainer.innerHTML += `<button class="capsule ${isActive ? 'active' : ''}" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`;
-            });
-
+            const contextualSources = computeContextualSources();
             const sourceContainer = document.getElementById('source-filter-container');
-            const sourcesSet = new Set();
-            sourceData.forEach(item => { if (item.source_name) sourcesSet.add(item.source_name); });
-
-            sourceContainer.innerHTML = `<button class="capsule ${activeSources.includes('All') ? 'active' : ''}" data-source="All">All sources</button>`;
-            Array.from(sourcesSet).sort().forEach(src => {
-                const isActive = activeSources.includes(src);
-                sourceContainer.innerHTML += `<button class="capsule ${isActive ? 'active' : ''}" data-source="${escapeHtml(src)}">${escapeHtml(src)}</button>`;
+            sourceContainer.innerHTML = '<button class="capsule ' + (activeSources.includes('All') ? 'active' : '') + '" data-source="All">All sources</button>';
+            contextualSources.forEach(src => {
+                sourceContainer.innerHTML += '<button class="capsule ' + (activeSources.includes(src) ? 'active' : '') + '" data-source="' + escapeHtml(src) + '">' + escapeHtml(src) + '</button>';
             });
 
-            document.querySelectorAll(`#lang-filter-container .capsule`).forEach(btn => {
-                const lang = btn.dataset.lang;
-                btn.classList.toggle('active', activeLanguages.includes(lang));
-            });
+            document.querySelectorAll('#lang-filter-container .capsule').forEach(btn => btn.classList.toggle('active', activeLanguages.includes(btn.dataset.lang)));
         }
 
         function handleMultiSelect(clickedVal, currentArray, allVal) {
-            if (clickedVal === allVal) {
-                return [allVal];
-            }
+            if (clickedVal === allVal) return [allVal];
             let next = currentArray.filter(v => v !== allVal);
-            if (next.includes(clickedVal)) {
-                next = next.filter(v => v !== clickedVal);
-            } else {
-                next.push(clickedVal);
-            }
-            if (next.length === 0) {
-                return [allVal];
-            }
-            return next;
+            if (next.includes(clickedVal)) next = next.filter(v => v !== clickedVal);
+            else next.push(clickedVal);
+            return next.length === 0 ? [allVal] : next;
         }
 
-        document.getElementById('filter-container').addEventListener('click', (e) => {
-            const btn = e.target.closest('.capsule');
-            if (!btn) return;
+        document.getElementById('filter-container').addEventListener('click', e => {
+            const btn = e.target.closest('.capsule'); if (!btn) return;
             activeCategories = handleMultiSelect(btn.dataset.category, activeCategories, 'All');
             localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
             setupFilters();
-            fetchArticlesFromWorker(true);
+            applyFiltersAndSort();
         });
 
-        document.getElementById('source-filter-container').addEventListener('click', (e) => {
-            const btn = e.target.closest('.capsule');
-            if (!btn) return;
+        document.getElementById('source-filter-container').addEventListener('click', e => {
+            const btn = e.target.closest('.capsule'); if (!btn) return;
             activeSources = handleMultiSelect(btn.dataset.source, activeSources, 'All');
             localStorage.setItem('newsSources', JSON.stringify(activeSources));
             setupFilters();
-            fetchArticlesFromWorker(true);
+            applyFiltersAndSort();
         });
 
-        document.getElementById('lang-filter-container').addEventListener('click', (e) => {
-            const btn = e.target.closest('.capsule');
-            if (!btn) return;
+        document.getElementById('lang-filter-container').addEventListener('click', e => {
+            const btn = e.target.closest('.capsule'); if (!btn) return;
             activeLanguages = handleMultiSelect(btn.dataset.lang, activeLanguages, 'All');
             localStorage.setItem('newsLanguages', JSON.stringify(activeLanguages));
             setupFilters();
-            fetchArticlesFromWorker(true);
+            applyFiltersAndSort();
         });
 
         document.getElementById('search-box').addEventListener('input', () => {
             updateSearchClearBtn();
             clearTimeout(searchDebounce);
             searchDebounce = setTimeout(() => {
-                activeCategories = ['All'];
-                activeSources = ['All'];
-                activeLanguages = ['All'];
-                localStorage.setItem('newsCategories', JSON.stringify(['All']));
-                localStorage.setItem('newsSources', JSON.stringify(['All']));
-                localStorage.setItem('newsLanguages', JSON.stringify(['All']));
-                setupFilters();
-                fetchArticlesFromWorker(true);
+                const term = document.getElementById('search-box').value.trim();
+                if (term) {
+                    // Always hit the API/worker for search — fresh results from the base
+                    currentDisplayed = itemsPerPage;
+                    fetchPageNum = 1;
+                    fetchArticlesFromWorker(true);
+                } else {
+                    applyFiltersAndSort();
+                }
             }, 400);
         });
+
         document.getElementById('sort-box').addEventListener('change', applyFiltersAndSort);
 
+        function loadFromCache() {
+            const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            if (cachedTime && cachedData) {
+                try {
+                    const data = JSON.parse(cachedData);
+                    if (data.length > 0) {
+                        globalData = data;
+                        setupFilters();
+                        renderTicker(globalData.slice(0, 12));
+                        currentDisplayed = itemsPerPage;
+                        applyFiltersAndSort();
+                        setTimeout(positionSegSlider, 50);
+                        return true;
+                    }
+                } catch (e) {}
+            }
+            return false;
+        }
+
         // ==========================================
-        // WORKER FETCH REPLACEMENT
+        // FETCH: Two modes —
+        //   1) refresh (pages 1+2, merge with cache)
+        //   2) loadMore (incremental page N, append to globalData)
         // ==========================================
-        async function fetchArticlesFromWorker(force, append = false) {
+        async function fetchArticlesFromWorker(force = false, isLoadMoreCall = false) {
             if (isFetching) return;
             isFetching = true;
 
+            const btn = document.getElementById('load-more-btn');
+            if (btn && isLoadMoreCall) btn.textContent = 'Loading...';
+
             try {
                 const searchTerm = document.getElementById('search-box').value.trim();
+                const now = Date.now();
 
-                if (!force && lastAnyFetchTime > 0) {
-                    const now = Date.now();
-                    if ((now - lastAnyFetchTime) < MIN_FETCH_INTERVAL) {
-                        if (globalData.length > 0) {
-                            applyFiltersAndSort();
-                            setTimeout(positionSegSlider, 50);
-                        }
-                        return;
-                    }
-                }
-
-                const cacheKey = JSON.stringify({
-                    sources: activeSources,
-                    languages: activeLanguages,
-                    search: searchTerm,
-                    categories: activeCategories,
-                    page: append ? fetchPage + 1 : 1
-                });
-
-                if (!force && globalData.length > 0) {
-                    const now = Date.now();
-                    if (cacheKey === lastFetchKey && (now - lastFetchTime) < CACHE_TTL) {
+                // Cache guard: skip if cache is fresh AND this is not a load-more call AND not forced
+                if (!force && !isLoadMoreCall && !searchTerm && globalData.length > 0) {
+                    const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+                    if (cachedTime && (now - Number(cachedTime) < CACHE_TTL)) {
+                        setupFilters();
+                        renderTicker(globalData.slice(0, 12));
+                        currentDisplayed = itemsPerPage;
                         applyFiltersAndSort();
                         setTimeout(positionSegSlider, 50);
+                        isFetching = false;
                         return;
                     }
                 }
 
-                if (!append) {
-                    renderSkeletons(8);
-                    fetchPage = 1;
-                    hasMoreData = true;
-                    appendCount = 0;
+                if (globalData.length === 0) renderSkeletons(8);
+
+                const existingUrls = new Set(globalData.map(item => item.url));
+
+                if (isLoadMoreCall) {
+                    // === LOAD MORE: fetch the NEXT server page incrementally ===
+                    const queryParams = new URLSearchParams({ page: fetchPageNum.toString(), size: '100' });
+                    if (searchTerm) queryParams.append('search', searchTerm);
+                    const res = await fetch(API_WORKER_URL + '?' + queryParams.toString());
+
+                    if (res.ok) {
+                        const newData = await res.json();
+                        let added = 0;
+                        if (Array.isArray(newData)) {
+                            newData.forEach(item => {
+                                if (item.url && !existingUrls.has(item.url)) {
+                                    globalData.push(item);
+                                    existingUrls.add(item.url);
+                                    added++;
+                                }
+                            });
+                        }
+                        if (added > 0) fetchPageNum++;
+                    }
+                    currentDisplayed += itemsPerPage;
+
                 } else {
-                    fetchPage++;
+                    // === FRESH FETCH / REFRESH: pages 1+2 concurrently ===
+                    const fetchPage = async (page) => {
+                        const qp = new URLSearchParams({ page: page.toString(), size: '200' });
+                        if (searchTerm) qp.append('search', searchTerm);
+                        const r = await fetch(API_WORKER_URL + '?' + qp.toString());
+                        return r.ok ? await r.json() : [];
+                    };
+
+                    const [page1, page2] = await Promise.all([fetchPage(1), fetchPage(2)]);
+                    const rawData = [...(page1 || []), ...(page2 || [])];
+
+                    const freshUrls = new Set();
+                    const freshItems = rawData.filter(item => {
+                        if (!item.url || freshUrls.has(item.url)) return false;
+                        freshUrls.add(item.url);
+                        return true;
+                    });
+
+                    const merged = [...globalData];
+                    freshItems.forEach(item => {
+                        if (!existingUrls.has(item.url)) {
+                            merged.push(item);
+                            existingUrls.add(item.url);
+                        }
+                    });
+                    globalData = merged;
+                    fetchPageNum = 3; // Next load-more starts at page 3
+                    currentDisplayed = itemsPerPage;
                 }
 
-                // Always fetch all data; all filtering is done client-side so
-                // filter pills (topics, sources, languages) always show all available options
-                const queryParams = new URLSearchParams({
-                    search: searchTerm,
-                    category: 'All',
-                    source: 'All',
-                    language: 'All',
-                    page: fetchPage.toString(),
-                    size: FETCH_LIMIT.toString()
-                });
-
-                const response = await fetch(`${API_WORKER_URL}?${queryParams.toString()}`);
-                if (!response.ok) {
-                    throw new Error(`Worker API HTTP status: ${response.status}`);
+                if (!searchTerm && globalData.length > 0) {
+                    try { localStorage.setItem(CACHE_KEY, JSON.stringify(globalData)); localStorage.setItem(CACHE_TIME_KEY, now.toString()); } catch (e) {}
                 }
-
-                const newData = await response.json();
-                hasMoreData = newData.length === FETCH_LIMIT;
-
-                if (append && globalData.length > 0) {
-                    const existingUrls = new Set(globalData.map(d => d.url));
-                    const uniqueNew = newData.filter(d => !existingUrls.has(d.url));
-                    globalData = [...globalData, ...uniqueNew];
-                    appendCount++;
-                } else {
-                    globalData = newData;
-                }
-
-                lastFetchKey = cacheKey;
-                lastFetchTime = Date.now();
-                lastAnyFetchTime = Date.now();
 
                 if (globalData.length > 0) {
                     setupFilters();
@@ -943,83 +791,59 @@
                     document.getElementById('ticker-bar').style.display = 'none';
                 }
 
-                if (!append) {
-                    currentDisplayed = itemsPerPage;
-                }
                 applyFiltersAndSort();
                 setTimeout(positionSegSlider, 50);
 
             } catch (error) {
                 console.error("Worker API Error:", error);
                 document.getElementById('ticker-bar').style.display = 'none';
-                if (!append) renderErrorState();
+                if (globalData.length === 0) renderErrorState();
             } finally {
                 isFetching = false;
+                if (btn) btn.textContent = 'Load more';
             }
         }
 
         function applyFiltersAndSort() {
             const sortMode = document.getElementById('sort-box').value || 'newest';
-
+            const searchTerm = document.getElementById('search-box').value.trim().toLowerCase();
             filteredData = [...globalData];
 
-            if (sortMode === 'bookmarks') {
-                filteredData = filteredData.filter(item => bookmarks.includes(item.url));
-            }
+            if (sortMode === 'bookmarks') filteredData = filteredData.filter(item => bookmarks.includes(item.url));
 
+            if (!activeLanguages.includes('All')) {
+                filteredData = filteredData.filter(item => activeLanguages.includes(isBanglaText(item.title) ? 'Bangla' : 'English'));
+            }
+            if (!activeSources.includes('All')) {
+                filteredData = filteredData.filter(item => activeSources.includes(item.source_name));
+            }
             if (!activeCategories.includes('All')) {
                 filteredData = filteredData.filter(item => {
-                    const itemTags = parseTags(item);
-                    return activeCategories.some(cat => itemTags.includes(cat));
+                    const tags = parseTags(item);
+                    return activeCategories.some(cat => tags.includes(cat));
                 });
             }
-
-            // Client-side language filtering (Baserow Single Select returns language as a string)
-            if (!activeLanguages.includes('All')) {
+            if (searchTerm) {
                 filteredData = filteredData.filter(item => {
-                    const itemLang = item.language || '';
-                    return activeLanguages.some(lang => itemLang === lang);
+                    const title = (item.title || '').toLowerCase();
+                    const summary = (item.summary || '').toLowerCase();
+                    const source = (item.source_name || '').toLowerCase();
+                    const tagStr = parseTags(item).map(t => t.toLowerCase()).join(' ');
+                    return title.includes(searchTerm) || summary.includes(searchTerm) || source.includes(searchTerm) || tagStr.includes(searchTerm);
                 });
             }
 
-            // Client-side source filtering
-            if (!activeSources.includes('All')) {
-                filteredData = filteredData.filter(item => {
-                    return activeSources.includes(item.source_name);
-                });
-            }
+            if (sortMode === 'oldest') filteredData.sort((a, b) => new Date(a.published_at || 0) - new Date(b.published_at || 0));
+            else if (sortMode !== 'bookmarks') filteredData.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
 
-            if (sortMode === 'oldest') {
-                filteredData.sort((a, b) => new Date(a.published_at || 0) - new Date(b.published_at || 0));
-            } else if (sortMode !== 'bookmarks') {
-                filteredData.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
-            }
-
-            // Update topic/source pills to show only what's present in the filtered data
-            // (on initial load filteredData === globalData, so all topics show)
-            setupFilters(filteredData);
+            setupFilters();
             renderArticles();
         }
 
         window.loadMore = function() {
             if (isFetching) return;
-
-            currentDisplayed += itemsPerPage;
-
-            if (currentDisplayed >= filteredData.length && hasMoreData && appendCount < MAX_APPENDS) {
-                const btn = document.getElementById('load-more-btn');
-                btn.textContent = 'Loading more...';
-                btn.disabled = true;
-                fetchArticlesFromWorker(true, true).then(() => {
-                    btn.textContent = 'Load more';
-                    btn.disabled = false;
-                }).catch(() => {
-                    btn.textContent = 'Load more';
-                    btn.disabled = false;
-                });
-            } else {
-                renderArticles();
-            }
+            // Always fetch from the base for Load More — incremental server-side pagination
+            fetchArticlesFromWorker(false, true);
         }
 
         window.filterByTag = function(tag) {
@@ -1027,7 +851,7 @@
                 activeCategories = [tag];
                 localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
                 setupFilters();
-                fetchArticlesFromWorker(true);
+                applyFiltersAndSort();
             }
             window.scrollTo({ top: 400, behavior: 'smooth' });
         }
@@ -1045,194 +869,104 @@
             const nowSaved = !bookmarks.includes(url);
             bookmarks = nowSaved ? [...bookmarks, url] : bookmarks.filter(l => l !== url);
             localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
-
-            document.querySelectorAll(`.bookmark-btn[data-url="${cssEscape(url)}"]`).forEach(btn => {
+            document.querySelectorAll('.bookmark-btn[data-url="' + cssEscape(url) + '"]').forEach(btn => {
                 btn.innerHTML = nowSaved ? svgBookmarkFilled : svgBookmarkEmpty;
                 btn.classList.toggle('saved', nowSaved);
             });
-
             if (document.getElementById('sort-box').value === 'bookmarks') applyFiltersAndSort();
         }
 
         window.handleShare = async function(title, url) {
-            const shareData = { title: title, url: url };
-            if (navigator.share && (window.innerWidth < 1024)) {
-                try {
-                    await navigator.share(shareData);
-                } catch (err) {
-                    if (err.name !== 'AbortError') {
-                        fallbackCopyUrl(url);
-                    }
-                }
-            } else {
-                fallbackCopyUrl(url);
-            }
+            if (navigator.share && window.innerWidth < 1024) {
+                try { await navigator.share({ title, url }); } catch (err) { if (err.name !== 'AbortError') fallbackCopyUrl(url); }
+            } else fallbackCopyUrl(url);
         }
 
-        function fallbackCopyUrl(url) {
-            navigator.clipboard.writeText(url).then(() => {
-                showToast("Link copied to clipboard!");
-            }).catch(() => {
-                prompt("Copy link:", url);
-            });
-        }
+        function fallbackCopyUrl(url) { navigator.clipboard.writeText(url).then(() => showToast("Link copied to clipboard!")).catch(() => prompt("Copy link:", url)); }
 
-        function cssEscape(str) {
-            return window.CSS && CSS.escape ? CSS.escape(str) : str.replace(/["\\]/g, '\\$&');
-        }
+        function cssEscape(str) { return window.CSS && CSS.escape ? CSS.escape(str) : str.replace(/["\\]/g, '\\$&'); }
 
-        document.getElementById('news-container').addEventListener('click', (e) => {
-            const bookmarkBtn = e.target.closest('.bookmark-btn');
-            if (bookmarkBtn) {
-                e.preventDefault();
-                toggleBookmark(bookmarkBtn.dataset.url);
-                return;
-            }
-            const shareBtn = e.target.closest('.share-btn');
-            if (shareBtn) {
-                e.preventDefault();
-                handleShare(shareBtn.dataset.title, shareBtn.dataset.url);
-                return;
-            }
-            const tagBadge = e.target.closest('.tag[data-tag]');
-            if (tagBadge) {
-                e.preventDefault();
-                filterByTag(tagBadge.dataset.tag);
-                return;
-            }
-            const link = e.target.closest('a[data-url]');
-            if (link) markRead(link.dataset.url);
+        document.getElementById('news-container').addEventListener('click', e => {
+            const bk = e.target.closest('.bookmark-btn');
+            if (bk) { e.preventDefault(); toggleBookmark(bk.dataset.url); return; }
+            const sh = e.target.closest('.share-btn');
+            if (sh) { e.preventDefault(); handleShare(sh.dataset.title, sh.dataset.url); return; }
+            const tg = e.target.closest('.tag[data-tag]');
+            if (tg) { e.preventDefault(); filterByTag(tg.dataset.tag); return; }
+            const ln = e.target.closest('a[data-url]');
+            if (ln) markRead(ln.dataset.url);
         });
 
         function buildCarouselHtml(items) {
-            carouselTotal = items.length;
-            currentSlide = 0;
-
+            carouselTotal = items.length; currentSlide = 0;
             const slidesHtml = items.map((item, index) => {
-                const isBookmarked = bookmarks.includes(item.url);
-                const sourceTag = item.source_name || 'News';
-                const topicTags = parseTags(item).filter(t => t !== sourceTag && t !== 'Top News');
-                const url = escapeHtml(item.url);
-                const titleStr = escapeHtml(item.title);
-                const isBn = isBanglaText(item.title);
-
-                const allTagsHtml = [
-                    `<span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>`,
-                    ...topicTags.map(t => `<span class="tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`)
-                ].join('');
-
-                return `
-                    <div class="carousel-slide ${index === 0 ? 'active' : ''}" id="slide-${index}">
-                        <span class="wire-stamp">Top story</span>
-                        <a href="${url}" target="_blank" rel="noopener" data-url="${url}" class="hero-full-link" aria-label="${titleStr}"></a>
-                        <div class="card-image-wrap">
-                            ${item.image_url ? `<img src="${escapeHtml(item.image_url)}" class="news-image" alt="">` : ''}
-                            <div class="hero-overlay"></div>
-                        </div>
-
-                        <div class="news-content">
-                            <div class="content-main">
-                                <div class="tags-group">
-                                    ${allTagsHtml}
-                                </div>
-                                <a class="news-title ${isBn ? 'bn-title' : ''}" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
-                            </div>
-
-                            <div class="bookmark-wrap">
-                                <div style="display:flex; gap:4px;">
-                                    <button class="bookmark-btn ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
-                                        ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
-                                    </button>
-                                    <button class="share-btn" data-url="${url}" data-title="${titleStr}" title="Share" aria-label="Share article">
-                                        ${svgShare}
-                                    </button>
-                                </div>
-                                <div class="meta"><span>${getRelativeTime(item.published_at)}</span></div>
-                            </div>
-                        </div>
-                        <div class="carousel-progress-bar"></div>
-                    </div>
-                `;
+                const bm = bookmarks.includes(item.url), st = item.source_name || 'News';
+                const tt = parseTags(item).filter(t => t !== st && t !== 'Top News');
+                const u = escapeHtml(item.url), ti = escapeHtml(item.title), bn = isBanglaText(item.title);
+                const tagsHtml = ['<span class="tag" data-tag="' + escapeHtml(st) + '">' + escapeHtml(st) + '</span>', ...tt.map(t => '<span class="tag" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</span>')].join('');
+                return '<div class="carousel-slide ' + (index === 0 ? 'active' : '') + '" id="slide-' + index + '">'
+                    + '<span class="wire-stamp">Top story</span>'
+                    + '<a href="' + u + '" target="_blank" rel="noopener" data-url="' + u + '" class="hero-full-link" aria-label="' + ti + '"></a>'
+                    + '<div class="card-image-wrap">' + (item.image_url ? '<img src="' + escapeHtml(item.image_url) + '" class="news-image" alt="">' : '') + '<div class="hero-overlay"></div></div>'
+                    + '<div class="news-content"><div class="content-main"><div class="tags-group">' + tagsHtml + '</div>'
+                    + '<a class="news-title ' + (bn ? 'bn-title' : '') + '" href="' + u + '" target="_blank" rel="noopener" data-url="' + u + '">' + ti + '</a></div>'
+                    + '<div class="bookmark-wrap"><div style="display:flex; gap:4px;">'
+                    + '<button class="bookmark-btn ' + (bm ? 'saved' : '') + '" data-url="' + u + '" title="Save">' + (bm ? svgBookmarkFilled : svgBookmarkEmpty) + '</button>'
+                    + '<button class="share-btn" data-url="' + u + '" data-title="' + ti + '" title="Share">' + svgShare + '</button></div>'
+                    + '<div class="meta"><span>' + getRelativeTime(item.published_at) + '</span></div></div></div>'
+                    + '<div class="carousel-progress-bar"></div></div>';
             }).join('');
-
-            const dotsHtml = items.map((_, index) => `
-                <div class="dot ${index === 0 ? 'active' : ''}" data-slide="${index}" id="dot-${index}"></div>
-            `).join('');
-
-            return `
-                <div class="hero-carousel" id="hero-carousel" onmouseenter="pauseCarousel()" onmouseleave="resumeCarousel()">
-                    ${slidesHtml}
-                    <button class="carousel-nav prev" onclick="moveSlide(-1)" aria-label="Previous story">&#10094;</button>
-                    <button class="carousel-nav next" onclick="moveSlide(1)" aria-label="Next story">&#10095;</button>
-                    <div class="carousel-dots">${dotsHtml}</div>
-                </div>
-            `;
+            const dotsHtml = items.map((_, i) => '<div class="dot ' + (i === 0 ? 'active' : '') + '" data-slide="' + i + '" id="dot-' + i + '"></div>').join('');
+            return '<div class="hero-carousel" id="hero-carousel" onmouseenter="pauseCarousel()" onmouseleave="resumeCarousel()">' + slidesHtml
+                + '<button class="carousel-nav prev" onclick="moveSlide(-1)">&#10094;</button>'
+                + '<button class="carousel-nav next" onclick="moveSlide(1)">&#10095;</button>'
+                + '<div class="carousel-dots">' + dotsHtml + '</div></div>';
         }
 
         window.moveSlide = function(step) {
-            let nextSlide = currentSlide + step;
-            if (nextSlide >= carouselTotal) nextSlide = 0;
-            if (nextSlide < 0) nextSlide = carouselTotal - 1;
-            goToSlide(nextSlide);
+            let ns = currentSlide + step;
+            if (ns >= carouselTotal) ns = 0; if (ns < 0) ns = carouselTotal - 1;
+            goToSlide(ns);
         }
 
         function goToSlide(index) {
             document.querySelectorAll('.carousel-slide').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
-            const slide = document.getElementById(`slide-${index}`);
-            const dot = document.getElementById(`dot-${index}`);
-            if (slide) slide.classList.add('active');
-            if (dot) dot.classList.add('active');
+            const slide = document.getElementById('slide-' + index), dot = document.getElementById('dot-' + index);
+            if (slide) slide.classList.add('active'); if (dot) dot.classList.add('active');
             currentSlide = index;
             resetCarouselTimer();
         }
 
         function startCarouselTimer() {
             clearInterval(carouselInterval);
-            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            if (reduceMotion) return;
-            carouselInterval = setInterval(() => { moveSlide(1); }, 5000);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) carouselInterval = setInterval(() => { moveSlide(1); }, 5000);
         }
 
         window.pauseCarousel = function() {
             clearInterval(carouselInterval);
-            const activeBar = document.querySelector('.carousel-slide.active .carousel-progress-bar');
-            if (activeBar) {
-                const computedWidth = window.getComputedStyle(activeBar).width;
-                activeBar.style.transition = 'none';
-                activeBar.style.width = computedWidth;
-            }
+            const ab = document.querySelector('.carousel-slide.active .carousel-progress-bar');
+            if (ab) { ab.style.transition = 'none'; ab.style.width = window.getComputedStyle(ab).width; }
         }
 
         window.resumeCarousel = function() {
-            const activeBar = document.querySelector('.carousel-slide.active .carousel-progress-bar');
-            if (activeBar) {
-                const currentW = parseFloat(window.getComputedStyle(activeBar).width);
-                const parentW = activeBar.parentElement.offsetWidth;
-                const remainingRatio = 1 - (currentW / parentW);
-                const remainingTime = 5000 * remainingRatio;
-                activeBar.style.transition = `width ${remainingTime}ms linear`;
-                activeBar.style.width = '100%';
+            const ab = document.querySelector('.carousel-slide.active .carousel-progress-bar');
+            if (ab) {
+                const cw = parseFloat(window.getComputedStyle(ab).width), pw = ab.parentElement.offsetWidth;
+                ab.style.transition = 'width ' + (5000 * (1 - cw / pw)) + 'ms linear'; ab.style.width = '100%';
             }
             startCarouselTimer();
         }
 
         function resetCarouselTimer() {
-            const activeBar = document.querySelector('.carousel-slide.active .carousel-progress-bar');
-            if (activeBar) {
-                activeBar.style.transition = 'none';
-                activeBar.style.width = '0%';
-                setTimeout(() => {
-                    activeBar.style.transition = 'width 5s linear';
-                    activeBar.style.width = '100%';
-                }, 50);
-            }
+            const ab = document.querySelector('.carousel-slide.active .carousel-progress-bar');
+            if (ab) { ab.style.transition = 'none'; ab.style.width = '0%'; setTimeout(() => { ab.style.transition = 'width 5s linear'; ab.style.width = '100%'; }, 50); }
             startCarouselTimer();
         }
 
         function setupCarouselSwipe(el) {
-            el.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
-            el.addEventListener('touchend', (e) => {
+            el.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+            el.addEventListener('touchend', e => {
                 if (touchStartX === null) return;
                 const delta = e.changedTouches[0].clientX - touchStartX;
                 if (Math.abs(delta) > 40) moveSlide(delta < 0 ? 1 : -1);
@@ -1244,147 +978,65 @@
             const bar = document.getElementById('ticker-bar');
             if (!items.length) { bar.style.display = 'none'; return; }
             bar.style.display = 'flex';
-
-            const headlines = items.map(item =>
-                `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" data-url="${escapeHtml(item.url)}">${escapeHtml(item.title)}</a>`
-            ).join('<span class="ticker-sep">&nbsp;&#8226;&nbsp;</span>');
-
+            const headlines = items.map(item => '<a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener" data-url="' + escapeHtml(item.url) + '">' + escapeHtml(item.title) + '</a>').join('<span class="ticker-sep">&nbsp;&#8226;&nbsp;</span>');
             const track = document.getElementById('ticker-track');
             track.innerHTML = headlines + '<span class="ticker-sep">&nbsp;&#8226;&nbsp;</span>' + headlines;
-
-            track.querySelectorAll('a').forEach(a => {
-                a.addEventListener('click', () => markRead(a.dataset.url));
-            });
+            track.querySelectorAll('a').forEach(a => a.addEventListener('click', () => markRead(a.dataset.url)));
         }
 
         function buildCardHtml(item, index = 0) {
-            const isRead = readArticles.includes(item.url);
-            const isBookmarked = bookmarks.includes(item.url);
-            const cardId = hashId(item.url);
-            const snippet = item.summary || '';
-            const sourceTag = item.source_name || 'News';
+            const isRead = readArticles.includes(item.url), isBookmarked = bookmarks.includes(item.url);
+            const cardId = hashId(item.url), snippet = item.summary || '', sourceTag = item.source_name || 'News';
             const topicTags = parseTags(item).filter(t => t !== sourceTag && t !== 'Top News');
-            const url = escapeHtml(item.url);
-            const titleStr = escapeHtml(item.title);
-            const isBn = isBanglaText(item.title);
-
-            const hasImage = Boolean(item.image_url);
-            const isMasonry = currentView === 'masonry';
+            const url = escapeHtml(item.url), titleStr = escapeHtml(item.title), isBn = isBanglaText(item.title);
+            const hasImage = Boolean(item.image_url), isMasonry = currentView === 'masonry';
             const spanClass = (isMasonry && (index % 5 === 0 || index % 7 === 1)) ? 'span-2' : '';
             const noImageCardClass = (!hasImage && isMasonry) ? 'no-image-card' : '';
-
             const imageHtml = hasImage
-                ? `<a href="${url}" target="_blank" rel="noopener" data-url="${url}" class="card-image-wrap"><img src="${escapeHtml(item.image_url)}" alt="" class="news-image" loading="lazy"></a>`
-                : (isMasonry ? '' : `<div class="card-image-wrap"><span class="no-image-placeholder">No image</span></div>`);
-
-            const allTagsHtml = [
-                `<span class="tag" data-tag="${escapeHtml(sourceTag)}">${escapeHtml(sourceTag)}</span>`,
-                ...topicTags.map(t => `<span class="tag" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`)
-            ].join('');
+                ? '<a href="' + url + '" target="_blank" rel="noopener" data-url="' + url + '" class="card-image-wrap"><img src="' + escapeHtml(item.image_url) + '" alt="" class="news-image" loading="lazy"></a>'
+                : (isMasonry ? '' : '<div class="card-image-wrap"><span class="no-image-placeholder">No image</span></div>');
+            const allTagsHtml = ['<span class="tag" data-tag="' + escapeHtml(sourceTag) + '">' + escapeHtml(sourceTag) + '</span>',
+                ...topicTags.map(t => '<span class="tag" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</span>')].join('');
 
             if (!hasImage && isMasonry) {
-                return `
-                    <div id="${cardId}" class="news-card ${spanClass} ${noImageCardClass} ${isRead ? 'read' : ''}">
-                        <div class="news-content">
-                            <div class="content-main">
-                                <div class="card-header">
-                                    <div class="tags-group">
-                                        ${allTagsHtml}
-                                    </div>
-                                    <div class="card-actions-group">
-                                        <button class="bookmark-btn ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
-                                            ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
-                                        </button>
-                                        <button class="share-btn" data-url="${url}" data-title="${titleStr}" title="Share" aria-label="Share article">
-                                            ${svgShare}
-                                        </button>
-                                    </div>
-                                </div>
-                                <a class="news-title ${isBn ? 'bn-title' : ''}" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
-                                ${snippet ? `<div class="snippet">${escapeHtml(snippet)}</div>` : ''}
-                                <div class="meta">
-                                    <span>${getRelativeTime(item.published_at)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                return '<div id="' + cardId + '" class="news-card ' + spanClass + ' ' + noImageCardClass + ' ' + (isRead ? 'read' : '') + '">'
+                    + '<div class="news-content"><div class="content-main">'
+                    + '<div class="card-header"><div class="tags-group">' + allTagsHtml + '</div>'
+                    + '<div class="card-actions-group">'
+                    + '<button class="bookmark-btn ' + (isBookmarked ? 'saved' : '') + '" data-url="' + url + '" title="Save">' + (isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty) + '</button>'
+                    + '<button class="share-btn" data-url="' + url + '" data-title="' + titleStr + '" title="Share">' + svgShare + '</button></div></div>'
+                    + '<a class="news-title ' + (isBn ? 'bn-title' : '') + '" href="' + url + '" target="_blank" rel="noopener" data-url="' + url + '">' + titleStr + '</a>'
+                    + (snippet ? '<div class="snippet">' + escapeHtml(snippet) + '</div>' : '')
+                    + '<div class="meta"><span>' + getRelativeTime(item.published_at) + '</span></div></div></div></div>';
             }
 
-            return `
-                <div id="${cardId}" class="news-card ${spanClass} ${isRead ? 'read' : ''}">
-                    ${imageHtml}
-                    <div class="news-content">
-                        <div class="content-main">
-                            <div class="card-header">
-                                <div class="tags-group">
-                                    ${allTagsHtml}
-                                </div>
-                                <div class="card-actions-group">
-                                    <button class="bookmark-btn ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
-                                        ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
-                                    </button>
-                                    <button class="share-btn" data-url="${url}" data-title="${titleStr}" title="Share" aria-label="Share article">
-                                        ${svgShare}
-                                    </button>
-                                </div>
-                            </div>
-                            <a class="news-title ${isBn ? 'bn-title' : ''}" href="${url}" target="_blank" rel="noopener" data-url="${url}">${titleStr}</a>
-                            ${snippet ? `<div class="snippet">${escapeHtml(snippet)}</div>` : ''}
-                            <div class="meta">
-                                <span>${getRelativeTime(item.published_at)}</span>
-                                <div class="text-only-tags">
-                                    ${allTagsHtml}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bookmark-wrap">
-                            <button class="bookmark-btn ${isBookmarked ? 'saved' : ''}" data-url="${url}" title="Save" aria-label="Save article">
-                                ${isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty}
-                            </button>
-                            <button class="share-btn" data-url="${url}" data-title="${titleStr}" title="Share" aria-label="Share article">
-                                ${svgShare}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
+            return '<div id="' + cardId + '" class="news-card ' + spanClass + ' ' + (isRead ? 'read' : '') + '">' + imageHtml
+                + '<div class="news-content"><div class="content-main">'
+                + '<div class="card-header"><div class="tags-group">' + allTagsHtml + '</div>'
+                + '<div class="card-actions-group">'
+                + '<button class="bookmark-btn ' + (isBookmarked ? 'saved' : '') + '" data-url="' + url + '" title="Save">' + (isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty) + '</button>'
+                + '<button class="share-btn" data-url="' + url + '" data-title="' + titleStr + '" title="Share">' + svgShare + '</button></div></div>'
+                + '<a class="news-title ' + (isBn ? 'bn-title' : '') + '" href="' + url + '" target="_blank" rel="noopener" data-url="' + url + '">' + titleStr + '</a>'
+                + (snippet ? '<div class="snippet">' + escapeHtml(snippet) + '</div>' : '')
+                + '<div class="meta"><span>' + getRelativeTime(item.published_at) + '</span><div class="text-only-tags">' + allTagsHtml + '</div></div></div>'
+                + '<div class="bookmark-wrap">'
+                + '<button class="bookmark-btn ' + (isBookmarked ? 'saved' : '') + '" data-url="' + url + '" title="Save">' + (isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty) + '</button>'
+                + '<button class="share-btn" data-url="' + url + '" data-title="' + titleStr + '" title="Share">' + svgShare + '</button></div></div></div>';
         }
 
         function renderSkeletons(count) {
-            const container = document.getElementById('news-container');
             let html = '';
-            for (let i = 0; i < count; i++) {
-                html += `
-                    <div class="skeleton-card">
-                        <div class="skeleton-block skeleton-img"></div>
-                        <div class="skeleton-block skeleton-line" style="width: 85%;"></div>
-                        <div class="skeleton-block skeleton-line" style="width: 60%;"></div>
-                    </div>
-                `;
-            }
-            container.innerHTML = html;
+            for (let i = 0; i < count; i++) html += '<div class="skeleton-card"><div class="skeleton-block skeleton-img"></div><div class="skeleton-block skeleton-line" style="width:85%"></div><div class="skeleton-block skeleton-line" style="width:60%"></div></div>';
+            document.getElementById('news-container').innerHTML = html;
         }
 
         function renderEmptyState() {
-            document.getElementById('news-container').innerHTML = `
-                <div class="state-panel">
-                    <div class="state-title">No articles match these filters</div>
-                    <div class="state-body">Try a different topic, source, or language — or clear your search.</div>
-                    <button class="state-action" onclick="resetFilters()">Clear filters</button>
-                </div>
-            `;
+            document.getElementById('news-container').innerHTML = '<div class="state-panel"><div class="state-title">No articles match these filters</div><div class="state-body">Try a different topic, source, or language — or clear your search.</div><button class="state-action" onclick="resetFilters()">Clear filters</button></div>';
             document.getElementById('load-more-btn').style.display = 'none';
         }
 
         function renderErrorState() {
-            document.getElementById('news-container').innerHTML = `
-                <div class="state-panel">
-                    <div class="state-title">Couldn't load the feed</div>
-                    <div class="state-body">The connection to the news source failed. Check your connection and try again.</div>
-                    <button class="state-action" onclick="fetchArticlesFromWorker(true)">Retry</button>
-                </div>
-            `;
+            document.getElementById('news-container').innerHTML = '<div class="state-panel"><div class="state-title">Couldn\'t load the feed</div><div class="state-body">The connection to the news source failed. Check your connection and try again.</div><button class="state-action" onclick="fetchArticlesFromWorker(true)">Retry</button></div>';
             document.getElementById('load-more-btn').style.display = 'none';
         }
 
@@ -1397,22 +1049,16 @@
             document.getElementById('sort-box').value = 'newest';
             updateSearchClearBtn();
             setupFilters();
-            fetchArticlesFromWorker(true);
+            applyFiltersAndSort();
         }
 
         function renderArticles() {
             const container = document.getElementById('news-container');
-
             if (carouselInterval) clearInterval(carouselInterval);
-
-            if (filteredData.length === 0) {
-                renderEmptyState();
-                return;
-            }
+            if (filteredData.length === 0) { renderEmptyState(); return; }
 
             let itemsToRender = filteredData.slice(0, currentDisplayed);
             let html = '';
-
             const showCarousel = currentView !== 'text';
 
             if (showCarousel && itemsToRender.length >= 3) {
@@ -1421,30 +1067,23 @@
             } else {
                 itemsToRender.forEach((item, idx) => html += buildCardHtml(item, idx));
             }
-
             container.innerHTML = html;
-            const showLoadMore = currentDisplayed < filteredData.length || (hasMoreData && appendCount < MAX_APPENDS);
-            document.getElementById('load-more-btn').style.display = showLoadMore ? 'block' : 'none';
+            document.getElementById('load-more-btn').style.display = 'block';
 
             if (showCarousel && itemsToRender.length >= 3) {
                 const carouselEl = document.getElementById('hero-carousel');
                 const dotsContainer = carouselEl.querySelector('.carousel-dots');
-                if (dotsContainer) dotsContainer.addEventListener('click', (e) => {
-                    const dot = e.target.closest('.dot');
-                    if (dot) goToSlide(Number(dot.dataset.slide));
-                });
+                if (dotsContainer) dotsContainer.addEventListener('click', e => { const dot = e.target.closest('.dot'); if (dot) goToSlide(Number(dot.dataset.slide)); });
                 setupCarouselSwipe(carouselEl);
                 startCarouselTimer();
             }
         }
 
+        // INIT
         applyView(currentView);
-        fetchArticlesFromWorker(true);
-        setInterval(() => {
-            if (!document.hidden) {
-                fetchArticlesFromWorker(true);
-            }
-        }, 60 * 60 * 1000);
+        const cacheHit = loadFromCache();
+        fetchArticlesFromWorker(cacheHit ? false : true);
+        setInterval(() => { if (!document.hidden) fetchArticlesFromWorker(true); }, 3 * 60 * 1000);
     </script>
 </body>
 </html>
