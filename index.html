@@ -661,27 +661,38 @@
 
         function parseTags(item) {
             if (!item.tags) return [];
-            // Baserow Multi Select returns array of {id, value} objects
-            if (Array.isArray(item.tags)) {
-                return item.tags.map(t => {
+            // Baserow text column stores tags as JSON array string e.g. '["The Daily Star","Sports"]'
+            // Or can be returned as array of strings or array of {id, value} objects
+            let raw = item.tags;
+            // If it's already an array
+            if (Array.isArray(raw)) {
+                return raw.map(t => {
                     if (typeof t === 'string') return t;
                     if (t && typeof t === 'object' && t.value) return t.value;
                     return null;
                 }).filter(Boolean);
             }
-            try {
-                const parsed = JSON.parse(item.tags);
-                if (Array.isArray(parsed)) {
-                    return parsed.map(t => {
-                        if (typeof t === 'string') return t;
-                        if (t && typeof t === 'object' && t.value) return t.value;
-                        return null;
-                    }).filter(Boolean);
+            // If it's a string, try JSON parse first
+            if (typeof raw === 'string') {
+                // Remove any outer whitespace
+                raw = raw.trim();
+                // Try JSON parse (handles '["a","b"]' format)
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        return parsed.map(t => {
+                            if (typeof t === 'string') return t;
+                            if (t && typeof t === 'object' && t.value) return t.value;
+                            return null;
+                        }).filter(Boolean);
+                    }
+                    return [];
+                } catch (e) {
+                    // Fallback: comma-separated string
+                    return raw.split(',').map(t => t.trim()).filter(Boolean);
                 }
-                return [];
-            } catch (e) {
-                return typeof item.tags === 'string' ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
             }
+            return [];
         }
 
         function applyView(viewType) {
@@ -739,10 +750,13 @@
             showToast("Filters cleared");
         }
 
-        function setupFilters() {
+        function setupFilters(dataSource) {
+            // Use provided data source, or fall back to globalData
+            const sourceData = dataSource || globalData;
+
             const tagContainer = document.getElementById('filter-container');
             const tagsSet = new Set();
-            globalData.forEach(item => {
+            sourceData.forEach(item => {
                 parseTags(item).forEach(t => { if (t && t !== item.source_name && t !== 'Top News') tagsSet.add(t); });
             });
 
@@ -754,7 +768,7 @@
 
             const sourceContainer = document.getElementById('source-filter-container');
             const sourcesSet = new Set();
-            globalData.forEach(item => { if (item.source_name) sourcesSet.add(item.source_name); });
+            sourceData.forEach(item => { if (item.source_name) sourcesSet.add(item.source_name); });
 
             sourceContainer.innerHTML = `<button class="capsule ${activeSources.includes('All') ? 'active' : ''}" data-source="All">All sources</button>`;
             Array.from(sourcesSet).sort().forEach(src => {
@@ -874,7 +888,8 @@
                     fetchPage++;
                 }
 
-                // Always fetch all data; filtering is done client-side for multi-select support
+                // Always fetch all data; all filtering is done client-side so
+                // filter pills (topics, sources, languages) always show all available options
                 const queryParams = new URLSearchParams({
                     search: searchTerm,
                     category: 'All',
@@ -964,6 +979,8 @@
                 filteredData.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
             }
 
+            // Update filter pills to show only tags/sources present in the filtered data
+            setupFilters(filteredData);
             renderArticles();
         }
 
