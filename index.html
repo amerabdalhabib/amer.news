@@ -660,39 +660,45 @@
         }
 
         function parseTags(item) {
-            if (!item.tags) return [];
-            // Baserow text column stores tags as JSON array string e.g. '["The Daily Star","Sports"]'
-            // Or can be returned as array of strings or array of {id, value} objects
-            let raw = item.tags;
-            // If it's already an array
-            if (Array.isArray(raw)) {
-                return raw.map(t => {
-                    if (typeof t === 'string') return t;
-                    if (t && typeof t === 'object' && t.value) return t.value;
-                    return null;
-                }).filter(Boolean);
-            }
-            // If it's a string, try JSON parse first
-            if (typeof raw === 'string') {
-                // Remove any outer whitespace
-                raw = raw.trim();
-                // Try JSON parse (handles '["a","b"]' format)
-                try {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) {
-                        return parsed.map(t => {
-                            if (typeof t === 'string') return t;
-                            if (t && typeof t === 'object' && t.value) return t.value;
-                            return null;
-                        }).filter(Boolean);
-                    }
-                    return [];
-                } catch (e) {
-                    // Fallback: comma-separated string
-                    return raw.split(',').map(t => t.trim()).filter(Boolean);
+            try {
+                if (!item || !item.tags) return [];
+                let raw = item.tags;
+                // Already an array of strings or {id, value} objects
+                if (Array.isArray(raw)) {
+                    return raw.map(t => {
+                        if (typeof t === 'string') return t;
+                        if (t && typeof t === 'object' && t.value) return t.value;
+                        return null;
+                    }).filter(Boolean);
                 }
+                // String: try JSON parse, then comma-separated fallback
+                if (typeof raw === 'string') {
+                    raw = raw.trim();
+                    if (!raw) return [];
+                    try {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) {
+                            return parsed.map(t => {
+                                if (typeof t === 'string') return t;
+                                if (t && typeof t === 'object' && t.value) return t.value;
+                                return null;
+                            }).filter(Boolean);
+                        }
+                        // Single string value
+                        if (typeof parsed === 'string') {
+                            return [parsed];
+                        }
+                        return [];
+                    } catch (e) {
+                        // Not valid JSON: try comma-separated
+                        const parts = raw.split(',').map(t => t.trim()).filter(Boolean);
+                        return parts.length ? parts : [raw];
+                    }
+                }
+                return [];
+            } catch (e) {
+                return [];
             }
-            return [];
         }
 
         function applyView(viewType) {
@@ -757,8 +763,18 @@
             const tagContainer = document.getElementById('filter-container');
             const tagsSet = new Set();
             sourceData.forEach(item => {
-                parseTags(item).forEach(t => { if (t && t !== item.source_name && t !== 'Top News') tagsSet.add(t); });
+                try {
+                    parseTags(item).forEach(t => { if (t && t !== item.source_name) tagsSet.add(t); });
+                } catch (e) {
+                    // Silently skip problematic items
+                }
             });
+
+            // Debug: log first item's tags to help diagnose
+            if (sourceData.length > 0 && typeof console !== 'undefined') {
+                console.log('First item tags field:', sourceData[0].tags, typeof sourceData[0].tags);
+                console.log('Parsed tags:', parseTags(sourceData[0]));
+            }
 
             tagContainer.innerHTML = `<button class="capsule ${activeCategories.includes('All') ? 'active' : ''}" data-category="All">All topics</button>`;
             Array.from(tagsSet).sort().forEach(cat => {
@@ -979,7 +995,8 @@
                 filteredData.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
             }
 
-            // Update filter pills to show only tags/sources present in the filtered data
+            // Update topic/source pills to show only what's present in the filtered data
+            // (on initial load filteredData === globalData, so all topics show)
             setupFilters(filteredData);
             renderArticles();
         }
