@@ -5,7 +5,7 @@ document.documentElement.setAttribute('data-theme', savedTheme);
 const API_WORKER_URL = 'https://amernewsapi.amerhabib.workers.dev/';
 let globalData = [];
 let filteredData = [];
-const itemsPerPage = 23;
+const itemsPerPage = 20; // Articles rendered per UI chunk
 let currentDisplayed = itemsPerPage;
 
 const CACHE_KEY = 'amernews_data';
@@ -13,8 +13,8 @@ const CACHE_TIME_KEY = 'amernews_time';
 const CACHE_TTL = 3 * 60 * 1000;
 
 let isFetching = false;
-let fetchPageNum = 1;
-let hasMoreServerData = true;
+let fetchPageNum = 1;          // Tracks server page offset for Baserow pagination
+let hasMoreServerData = true;  // Explicit flag to control infinite scroll exhaustion
 
 let activeCategories = safeParse(localStorage.getItem('newsCategories'), ['All']);
 let activeSources = safeParse(localStorage.getItem('newsSources'), ['All']);
@@ -105,7 +105,6 @@ window.openFilterModal = function() {
 }
 
 window.closeFilterModal = function(e) {
-    // Only close if clicking overlay directly OR clicking explicit close button
     if (!e || e.target === document.getElementById('filter-modal') || (e.target && e.target.closest && e.target.closest('.close-filter-popover'))) {
         const modal = document.getElementById('filter-modal');
         if (modal) {
@@ -193,6 +192,8 @@ window.clearAllFilters = function() {
     localStorage.setItem('newsCategories', JSON.stringify(['All']));
     localStorage.setItem('newsSources', JSON.stringify(['All']));
     localStorage.setItem('newsLanguages', JSON.stringify(['All']));
+    fetchPageNum = 1;
+    hasMoreServerData = true;
     setupFilters();
     fetchArticlesFromWorker(true);
     showToast("Filters cleared");
@@ -259,6 +260,8 @@ if (filterCont) filterCont.addEventListener('click', e => {
     const btn = e.target.closest('.capsule'); if (!btn) return;
     activeCategories = handleMultiSelect(btn.dataset.category, activeCategories, 'All');
     localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
+    fetchPageNum = 1;
+    hasMoreServerData = true;
     setupFilters();
     applyFiltersAndSort();
 });
@@ -268,6 +271,8 @@ if (sourceCont) sourceCont.addEventListener('click', e => {
     const btn = e.target.closest('.capsule'); if (!btn) return;
     activeSources = handleMultiSelect(btn.dataset.source, activeSources, 'All');
     localStorage.setItem('newsSources', JSON.stringify(activeSources));
+    fetchPageNum = 1;
+    hasMoreServerData = true;
     setupFilters();
     applyFiltersAndSort();
 });
@@ -277,6 +282,8 @@ if (langCont) langCont.addEventListener('click', e => {
     const btn = e.target.closest('.capsule'); if (!btn) return;
     activeLanguages = handleMultiSelect(btn.dataset.lang, activeLanguages, 'All');
     localStorage.setItem('newsLanguages', JSON.stringify(activeLanguages));
+    fetchPageNum = 1;
+    hasMoreServerData = true;
     setupFilters();
     applyFiltersAndSort();
 });
@@ -286,15 +293,10 @@ if (searchBox) searchBox.addEventListener('input', () => {
     updateSearchClearBtn();
     clearTimeout(searchDebounce);
     searchDebounce = setTimeout(() => {
-        const term = searchBox.value.trim();
-        if (term) {
-            fetchPageNum = 1;
-            hasMoreServerData = true;
-            currentDisplayed = itemsPerPage;
-            fetchArticlesFromWorker(true);
-        } else {
-            applyFiltersAndSort();
-        }
+        fetchPageNum = 1;
+        hasMoreServerData = true;
+        currentDisplayed = itemsPerPage;
+        fetchArticlesFromWorker(true);
     }, 350);
 });
 
@@ -325,16 +327,18 @@ function updateSentinelLoader(show) {
     const sentinel = document.getElementById('scroll-sentinel');
     if (!sentinel) return;
     if (show && (isFetching || hasMoreServerData)) {
-        sentinel.innerHTML = '<div class="sentinel-loader"><span class="ticker-dot"></span> Loading articles...</div>';
+        sentinel.innerHTML = '<div class="sentinel-loader"><span class="ticker-dot"></span> Loading articles from Baserow...</div>';
     } else {
         sentinel.innerHTML = '';
     }
 }
 
+// ALWAYS fetches directly from Cloudflare Worker / Baserow proxy with active pagination
 async function fetchArticlesFromWorker(force = false, isLoadMoreCall = false) {
     if (isFetching) return;
     const searchVal = document.getElementById('search-box');
     const searchTerm = searchVal ? searchVal.value.trim() : '';
+    
     if (isLoadMoreCall && !hasMoreServerData) return;
 
     isFetching = true;
@@ -343,15 +347,9 @@ async function fetchArticlesFromWorker(force = false, isLoadMoreCall = false) {
     try {
         const now = Date.now();
 
-        if (searchTerm && !isLoadMoreCall) {
-            fetchPageNum = 1;
-            hasMoreServerData = true;
-            globalData = [];
-        }
-
-        if (!force && !isLoadMoreCall && !searchTerm && globalData.length > 0) {
+        if (!isLoadMoreCall && (force || globalData.length === 0)) {
             const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
-            if (cachedTime && (now - Number(cachedTime) < CACHE_TTL)) {
+            if (!force && cachedTime && (now - Number(cachedTime) < CACHE_TTL) && !searchTerm) {
                 setupFilters();
                 renderTicker(globalData.slice(0, 12));
                 currentDisplayed = itemsPerPage;
@@ -365,67 +363,43 @@ async function fetchArticlesFromWorker(force = false, isLoadMoreCall = false) {
 
         if (globalData.length === 0 && !isLoadMoreCall) renderSkeletons(8);
 
-        if (isLoadMoreCall) {
-            const queryParams = new URLSearchParams({ page: fetchPageNum.toString(), size: '100' });
-            if (searchTerm) queryParams.append('search', searchTerm);
+        // Build query parameters pointing to Worker proxy
+        const queryParams = new URLSearchParams({ page: fetchPageNum.toString(), size: '50' });
+        if (searchTerm) queryParams.append('search', searchTerm);
 
-            const res = await fetch(API_WORKER_URL + '?' + queryParams.toString());
-            if (res.ok) {
-                const newData = await res.json();
-                if (Array.isArray(newData) && newData.length > 0) {
-                    const existingUrls = new Set(globalData.map(item => item.url));
-                    let added = 0;
-                    newData.forEach(item => {
-                        if (item.url && !existingUrls.has(item.url)) {
-                            globalData.push(item);
-                            existingUrls.add(item.url);
-                            added++;
-                        }
-                    });
-                    if (added > 0) fetchPageNum++;
-                    else hasMoreServerData = false;
-                    if (newData.length < 20) hasMoreServerData = false;
-                } else {
+        const res = await fetch(API_WORKER_URL + '?' + queryParams.toString());
+        
+        if (res.ok) {
+            const newData = await res.json();
+            if (Array.isArray(newData) && newData.length > 0) {
+                const existingUrls = new Set(globalData.map(item => item.url));
+                let addedCount = 0;
+                
+                newData.forEach(item => {
+                    if (item.url && !existingUrls.has(item.url)) {
+                        globalData.push(item);
+                        existingUrls.add(item.url);
+                        addedCount++;
+                    }
+                });
+
+                if (addedCount > 0) {
+                    fetchPageNum++;
+                }
+                
+                // If the worker returns fewer items than requested, we've reached the end of Baserow
+                if (newData.length < 20) {
                     hasMoreServerData = false;
                 }
             } else {
                 hasMoreServerData = false;
             }
-            currentDisplayed += itemsPerPage;
-
         } else {
-            const fetchPage = async (page) => {
-                const qp = new URLSearchParams({ page: page.toString(), size: '100' });
-                if (searchTerm) qp.append('search', searchTerm);
-                const r = await fetch(API_WORKER_URL + '?' + qp.toString());
-                return r.ok ? await r.json() : [];
-            };
+            hasMoreServerData = false;
+        }
 
-            const [page1, page2] = await Promise.all([fetchPage(1), fetchPage(2)]);
-            const rawData = [...(page1 || []), ...(page2 || [])];
-
-            const freshUrls = new Set();
-            const freshItems = rawData.filter(item => {
-                if (!item.url || freshUrls.has(item.url)) return false;
-                freshUrls.add(item.url);
-                return true;
-            });
-
-            if (searchTerm) {
-                globalData = freshItems;
-            } else {
-                const existingUrls = new Set(globalData.map(item => item.url));
-                freshItems.forEach(item => {
-                    if (!existingUrls.has(item.url)) {
-                        globalData.push(item);
-                        existingUrls.add(item.url);
-                    }
-                });
-            }
-
-            fetchPageNum = 3;
-            hasMoreServerData = freshItems.length >= 80;
-            currentDisplayed = itemsPerPage;
+        if (isLoadMoreCall) {
+            currentDisplayed += itemsPerPage;
         }
 
         if (!searchTerm && globalData.length > 0) {
@@ -495,15 +469,16 @@ function applyFiltersAndSort() {
     renderArticles();
 }
 
+// True Infinite Scroll Trigger: Expands local items or pulls fresh pages from Baserow
 function infiniteScrollTrigger() {
     if (isFetching) return;
 
     if (currentDisplayed < filteredData.length) {
+        // Show next batch from already-fetched memory
         currentDisplayed = Math.min(filteredData.length, currentDisplayed + itemsPerPage);
         renderArticles();
-    }
-
-    if ((filteredData.length - currentDisplayed < 10 || currentDisplayed >= filteredData.length) && hasMoreServerData) {
+    } else if (hasMoreServerData) {
+        // If local items run out, actively hit the Cloudflare Worker API for the next Baserow page
         fetchArticlesFromWorker(false, true);
     }
 }
@@ -512,6 +487,8 @@ window.filterByTag = function(tag) {
     if (!activeCategories.includes(tag)) {
         activeCategories = [tag];
         localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
+        fetchPageNum = 1;
+        hasMoreServerData = true;
         setupFilters();
         applyFiltersAndSort();
     }
@@ -717,6 +694,8 @@ window.resetFilters = function() {
     if (box) box.value = '';
     const sortBox = document.getElementById('sort-box');
     if (sortBox) sortBox.value = 'newest';
+    fetchPageNum = 1;
+    hasMoreServerData = true;
     updateSearchClearBtn();
     setupFilters();
     applyFiltersAndSort();
