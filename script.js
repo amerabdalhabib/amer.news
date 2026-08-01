@@ -75,13 +75,6 @@ window.toggleSearch = function() {
     if (show) { document.getElementById('search-box').focus(); updateSearchClearBtn(); }
 }
 
-window.toggleModal = function(id) {
-    const m = document.getElementById(id);
-    if (m) m.style.display = 'flex';
-}
-const loginModal = document.getElementById('login-modal');
-if (loginModal) loginModal.addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
-
 window.addEventListener('scroll', () => {
     const b = document.getElementById('back-to-top');
     if (b) b.style.display = window.scrollY > 300 ? 'flex' : 'none';
@@ -114,23 +107,26 @@ window.closeFilterModal = function(e) {
     }
 }
 
-window.toggleFilterAccordion = window.toggleFilterModal;
-
 function showToast(m) {
     const t = document.getElementById('toast');
     if (t) { t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
 }
 
-function getRelativeTime(dateStr) {
+// Human-legible date formatter: < 24 hours relative, otherwise formatted absolute without seconds
+function getReadableDate(dateStr) {
     if (!dateStr) return '';
-    const d = Math.floor((new Date() - new Date(dateStr)) / 1000);
-    if (d < 60) return "Just now";
-    const m = Math.floor(d / 60);
+    const pubDate = new Date(dateStr);
+    const diffMs = new Date() - pubDate;
+    const diffSecs = Math.floor(diffMs / 1000);
+    if (diffSecs < 60) return "Just now";
+    const m = Math.floor(diffSecs / 60);
     if (m < 60) return m + " min ago";
     const h = Math.floor(m / 60);
     if (h < 24) return h + " hr ago";
-    const days = Math.floor(h / 24);
-    return days === 1 ? "Yesterday" : days + " days ago";
+    
+    // Older than 24 hours: show full published date and time (no seconds)
+    return pubDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + 
+           pubDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
 function parseTags(item) {
@@ -325,11 +321,15 @@ function loadFromCache() {
 
 function updateSentinelLoader(show) {
     const sentinel = document.getElementById('scroll-sentinel');
+    const loadMoreBtn = document.getElementById('load-more-btn');
     if (!sentinel) return;
+
     if (show && (isFetching || hasMoreServerData)) {
         sentinel.innerHTML = '<div class="sentinel-loader"><span class="ticker-dot"></span> Loading articles from Baserow...</div>';
+        if (loadMoreBtn) loadMoreBtn.style.display = 'none';
     } else {
         sentinel.innerHTML = '';
+        if (loadMoreBtn) loadMoreBtn.style.display = hasMoreServerData ? 'inline-block' : 'none';
     }
 }
 
@@ -387,7 +387,6 @@ async function fetchArticlesFromWorker(force = false, isLoadMoreCall = false) {
                     fetchPageNum++;
                 }
                 
-                // If the worker returns fewer items than requested, we've reached the end of Baserow
                 if (newData.length < 20) {
                     hasMoreServerData = false;
                 }
@@ -469,18 +468,20 @@ function applyFiltersAndSort() {
     renderArticles();
 }
 
-// True Infinite Scroll Trigger: Expands local items or pulls fresh pages from Baserow
+// True Infinite Scroll Trigger & Manual Fallback Handler
 function infiniteScrollTrigger() {
     if (isFetching) return;
 
     if (currentDisplayed < filteredData.length) {
-        // Show next batch from already-fetched memory
         currentDisplayed = Math.min(filteredData.length, currentDisplayed + itemsPerPage);
         renderArticles();
     } else if (hasMoreServerData) {
-        // If local items run out, actively hit the Cloudflare Worker API for the next Baserow page
         fetchArticlesFromWorker(false, true);
     }
+}
+
+window.loadMoreManual = function() {
+    infiniteScrollTrigger();
 }
 
 window.filterByTag = function(tag) {
@@ -554,7 +555,7 @@ function buildCarouselHtml(items) {
             + '<div class="bookmark-wrap"><div style="display:flex; gap:4px;">'
             + '<button class="bookmark-btn ' + (bm ? 'saved' : '') + '" data-url="' + u + '" title="Save">' + (bm ? svgBookmarkFilled : svgBookmarkEmpty) + '</button>'
             + '<button class="share-btn" data-url="' + u + '" data-title="' + ti + '" title="Share">' + svgShare + '</button></div>'
-            + '<div class="meta"><span>' + getRelativeTime(item.published_at) + '</span></div></div></div>'
+            + '<div class="meta"><span>' + getReadableDate(item.published_at) + '</span></div></div></div>'
             + '<div class="carousel-progress-bar"></div></div>';
     }).join('');
     const dotsHtml = items.map((_, i) => '<div class="dot ' + (i === 0 ? 'active' : '') + '" data-slide="' + i + '" id="dot-' + i + '"></div>').join('');
@@ -642,6 +643,8 @@ function buildCardHtml(item, index = 0) {
     const allTagsHtml = ['<span class="tag" data-tag="' + escapeHtml(sourceTag) + '">' + escapeHtml(sourceTag) + '</span>',
         ...topicTags.map(t => '<span class="tag" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</span>')].join('');
 
+    const formattedDate = getReadableDate(item.published_at);
+
     if (!hasImage && isMasonry) {
         return '<div id="' + cardId + '" class="news-card ' + spanClass + ' ' + noImageCardClass + ' ' + (isRead ? 'read' : '') + '">'
             + '<div class="news-content"><div class="content-main">'
@@ -651,7 +654,7 @@ function buildCardHtml(item, index = 0) {
             + '<button class="share-btn" data-url="' + url + '" data-title="' + titleStr + '" title="Share">' + svgShare + '</button></div></div>'
             + '<a class="news-title ' + (isBn ? 'bn-title' : '') + '" href="' + url + '" target="_blank" rel="noopener" data-url="' + url + '">' + titleStr + '</a>'
             + (snippet ? '<div class="snippet">' + escapeHtml(snippet) + '</div>' : '')
-            + '<div class="meta"><span>' + getRelativeTime(item.published_at) + '</span></div></div></div></div>';
+            + '<div class="meta"><span>' + formattedDate + '</span></div></div></div></div>';
     }
 
     return '<div id="' + cardId + '" class="news-card ' + spanClass + ' ' + (isRead ? 'read' : '') + '">' + imageHtml
@@ -662,7 +665,7 @@ function buildCardHtml(item, index = 0) {
         + '<button class="share-btn" data-url="' + url + '" data-title="' + titleStr + '" title="Share">' + svgShare + '</button></div></div>'
         + '<a class="news-title ' + (isBn ? 'bn-title' : '') + '" href="' + url + '" target="_blank" rel="noopener" data-url="' + url + '">' + titleStr + '</a>'
         + (snippet ? '<div class="snippet">' + escapeHtml(snippet) + '</div>' : '')
-        + '<div class="meta"><span>' + getRelativeTime(item.published_at) + '</span><div class="text-only-tags">' + allTagsHtml + '</div></div></div>'
+        + '<div class="meta"><span>' + formattedDate + '</span><div class="text-only-tags">' + allTagsHtml + '</div></div></div>'
         + '<div class="bookmark-wrap">'
         + '<button class="bookmark-btn ' + (isBookmarked ? 'saved' : '') + '" data-url="' + url + '" title="Save">' + (isBookmarked ? svgBookmarkFilled : svgBookmarkEmpty) + '</button>'
         + '<button class="share-btn" data-url="' + url + '" data-title="' + titleStr + '" title="Share">' + svgShare + '</button></div></div></div>';
@@ -678,11 +681,15 @@ function renderSkeletons(count) {
 function renderEmptyState() {
     const container = document.getElementById('news-container');
     if (container) container.innerHTML = '<div class="state-panel"><div class="state-title">No articles match these filters</div><div class="state-body">Try a different topic, source, or language — or clear your search.</div><button class="state-action" onclick="resetFilters()">Clear filters</button></div>';
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
 }
 
 function renderErrorState() {
     const container = document.getElementById('news-container');
     if (container) container.innerHTML = '<div class="state-panel"><div class="state-title">Couldn\'t load the feed</div><div class="state-body">The connection to the news source failed. Check your connection and try again.</div><button class="state-action" onclick="fetchArticlesFromWorker(true)">Retry</button></div>';
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
 }
 
 window.resetFilters = function() {
@@ -718,6 +725,11 @@ function renderArticles() {
         itemsToRender.forEach((item, idx) => html += buildCardHtml(item, idx));
     }
     container.innerHTML = html;
+
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.style.display = (hasMoreServerData || currentDisplayed < filteredData.length) ? 'inline-block' : 'none';
+    }
 
     if (showCarousel && itemsToRender.length >= 3) {
         const carouselEl = document.getElementById('hero-carousel');
