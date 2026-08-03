@@ -581,6 +581,23 @@ window.filterByTag = function(tag) {
     window.scrollTo({ top: 400, behavior: 'smooth' });
 }
 
+window.filterBySource = function(sourceName) {
+    const source = MANUAL_FILTER_OPTIONS.sources.find(item => item.name === sourceName);
+    // Card data may contain a source that has not yet been added to the
+    // manually maintained options list. The exact API source value should
+    // still be selectable from the card; metadata is only needed for the
+    // optional language reconciliation below.
+    activeSources = [sourceName];
+    if (source && !activeLanguages.includes('All') && !activeLanguages.includes(source.language)) {
+        activeLanguages = [source.language];
+        localStorage.setItem('newsLanguages', JSON.stringify(activeLanguages));
+    }
+    localStorage.setItem('newsSources', JSON.stringify(activeSources));
+    setupFilters();
+    fetchArticlesFromWorker({ reason: 'source-tag', reset: true });
+    window.scrollTo({ top: 400, behavior: 'smooth' });
+}
+
 function markRead(url) {
     if (!readArticles.includes(url)) {
         readArticles.push(url);
@@ -618,6 +635,8 @@ if (newsCont) newsCont.addEventListener('click', e => {
     if (bk) { e.preventDefault(); toggleBookmark(bk.dataset.url); return; }
     const sh = e.target.closest('.share-btn');
     if (sh) { e.preventDefault(); handleShare(sh.dataset.title, sh.dataset.url); return; }
+    const sourceTag = e.target.closest('.tag[data-source]');
+    if (sourceTag) { e.preventDefault(); filterBySource(sourceTag.dataset.source); return; }
     const tg = e.target.closest('.tag[data-tag]');
     if (tg) { e.preventDefault(); filterByTag(tg.dataset.tag); return; }
     const ln = e.target.closest('a[data-url]');
@@ -630,7 +649,7 @@ function buildCarouselHtml(items) {
         const bm = bookmarks.includes(item.url), st = item.source_name || 'News';
         const tt = parseTags(item).filter(t => t !== st && t !== 'Top News');
         const u = escapeHtml(item.url), ti = escapeHtml(item.title), bn = isBanglaText(item.title);
-        const tagsHtml = ['<span class="tag" data-tag="' + escapeHtml(st) + '">' + escapeHtml(st) + '</span>', ...tt.map(t => '<span class="tag" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</span>')].join('');
+        const tagsHtml = ['<span class="tag" data-source="' + escapeHtml(st) + '">' + escapeHtml(st) + '</span>', ...tt.map(t => '<span class="tag" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</span>')].join('');
         return '<div class="carousel-slide ' + (index === 0 ? 'active' : '') + '" id="slide-' + index + '">'
             + '<span class="wire-stamp">Top story</span>'
             + '<a href="' + u + '" target="_blank" rel="noopener" data-url="' + u + '" class="hero-full-link" aria-label="' + ti + '"></a>'
@@ -725,7 +744,7 @@ function buildCardHtml(item, index = 0) {
     const imageHtml = hasImage
         ? '<a href="' + url + '" target="_blank" rel="noopener" data-url="' + url + '" class="card-image-wrap"><img src="' + escapeHtml(item.image_url) + '" alt="" class="news-image" loading="lazy"></a>'
         : (isMasonry ? '' : '<div class="card-image-wrap"><span class="no-image-placeholder">No image</span></div>');
-    const allTagsHtml = ['<span class="tag" data-tag="' + escapeHtml(sourceTag) + '">' + escapeHtml(sourceTag) + '</span>',
+    const allTagsHtml = ['<span class="tag" data-source="' + escapeHtml(sourceTag) + '">' + escapeHtml(sourceTag) + '</span>',
         ...topicTags.map(t => '<span class="tag" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</span>')].join('');
 
     if (!hasImage && isMasonry) {
