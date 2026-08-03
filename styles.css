@@ -224,6 +224,38 @@ h1 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; let
 .carousel-nav:hover { background: rgba(0,0,0,0.6); }
 .carousel-nav.prev { left: 12px; } .carousel-nav.next { right: 12px; }
 @media (max-width: 639px) { .carousel-nav { display: none; } }
+@media (max-width: 767px) {
+    .carousel-slide .hero-overlay {
+        background: linear-gradient(to bottom, transparent 10%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.9) 100%);
+    }
+    .carousel-slide .news-content {
+        padding: 14px;
+        padding-top: 30px;
+        justify-content: flex-end;
+        align-items: stretch;
+    }
+    .carousel-slide .content-main {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        flex: 1;
+    }
+    .carousel-slide .news-title {
+        font-size: 1.1rem;
+        margin-bottom: 6px;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+    .carousel-slide .news-title.bn-title {
+        font-size: calc(1.1rem * 0.9);
+    }
+    .carousel-slide .tags-group {
+        margin-bottom: 6px;
+    }
+    .carousel-slide .meta {
+        margin-top: 4px;
+    }
+}
+
 .carousel-dots { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 7px; z-index: 20; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; }
 .dot.active { background: #fff; transform: scale(1.25); }
@@ -250,6 +282,41 @@ h1 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; let
 
 footer { text-align: center; padding: 40px 0; margin-top: 30px; color: var(--ink-muted); font-size: 0.85rem; }
 footer a { color: var(--ink); text-decoration: underline; font-weight: 500; }
+
+/* Load More Button */
+.load-more-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 12px 28px;
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.load-more-btn:hover { background: var(--wire); }
+.load-more-btn:active { transform: scale(0.97); }
+.load-more-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.load-more-btn:disabled:hover { background: var(--ink); }
+
+.load-more-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--paper);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Floating Actions & Buttons */
 .floating-stack { position: fixed; bottom: 22px; right: 18px; display: flex; flex-direction: column; gap: 10px; z-index: 1100; }
