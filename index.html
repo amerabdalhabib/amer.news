@@ -9,19 +9,19 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="Amer.News">
     <meta property="og:description" content="The latest daily news curated and delivered in real-time.">
-    <meta property="og:image" content="https://amerhabib.com/public/ah_icon.png">
+    <meta property="og:image" content="https://raw.githubusercontent.com/amerabdalhabib/amer.news/main/images/ah_icon.png">
     <meta property="og:url" content="https://news.amerhabib.com/">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Amer.News — Wire Desk">
     <meta name="twitter:description" content="The latest daily news curated and delivered in real-time.">
-    <meta name="twitter:image" content="https://amerhabib.com/public/ah_icon.png">
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/amerabdalhabib/amer.news/main/images/ah_icon.png">
 
     <meta charset="UTF-8">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Amer.News</title>
 
-    <link rel="icon" type="image/jpeg" href="https://amerhabib.com/public/ah_icon.png">
+    <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/amerabdalhabib/amer.news/main/images/ah_icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -42,7 +42,7 @@
             <header>
                 <div class="header-top">
                     <a href="index.html" class="brand-zone" aria-label="Amer.News Home">
-                        <img src="https://amerhabib.com/public/ah_icon.png" alt="Amer.News logo" class="logo">
+                        <img src="https://raw.githubusercontent.com/amerabdalhabib/amer.news/main/images/ah_icon.png" alt="Amer.News logo" class="logo">
                         <div class="brand-text-wrap">
                             <h1>Amer.News</h1>
                             <span class="masthead-tag">Wire desk</span>
@@ -53,13 +53,10 @@
                         <button class="icon-btn" onclick="toggleSearch()" title="Search" aria-label="Search articles">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </button>
-                        <button class="icon-btn" onclick="fetchArticlesFromWorker(true)" title="Refresh feed" aria-label="Refresh feed">
+                        <button class="icon-btn" onclick="fetchArticlesFromWorker({reason: 'refresh', reset: true})" title="Refresh feed" aria-label="Refresh feed">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                         </button>
                         <button id="theme-btn" class="icon-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode"></button>
-                        <button class="icon-btn" onclick="toggleModal('login-modal')" title="Account" aria-label="Sign in">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        </button>
                     </div>
                 </div>
                 <div id="search-container">
@@ -100,6 +97,12 @@
         </div>
 
         <div id="news-container" class="layout-grid-4" aria-live="polite"></div>
+        <div id="load-more-container" style="text-align:center; padding: 10px 0 30px; display: none;">
+            <button id="load-more-btn" class="load-more-btn" onclick="loadMoreFromApi()">
+                <span id="load-more-text">Load more articles</span>
+                <span id="load-more-spinner" class="load-more-spinner" style="display:none;"></span>
+            </button>
+        </div>
         <div id="scroll-sentinel" style="min-height:20px;"></div>
         <footer>Built with &#9829; by <a href="https://amerhabib.com/" target="_blank" rel="noopener">Amer Habib</a></footer>
     </div>
