@@ -3,9 +3,48 @@ const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers
 document.documentElement.setAttribute('data-theme', savedTheme);
 
 const API_WORKER_URL = 'https://amernewsapi.amerhabib.workers.dev/';
+
+/*
+ * Manual customization options
+ * -----------------------------
+ * Update these arrays when you add a new language, topic, or source.
+ * The values should match the language/topic/source values stored by the
+ * Worker/Baserow data as closely as possible because they are also sent to
+ * the API and used by the client-side filter.
+ */
+const MANUAL_FILTER_OPTIONS = Object.freeze({
+    languages: ['English', 'Bangla'],
+    topics: [
+        'Top News',
+        'Bangladesh',
+        'World',
+        'Politics',
+        'Business',
+        'Technology',
+        'Sports',
+        'Entertainment',
+        'Health',
+        'Science'
+    ],
+    sources: [
+        { name: 'Al Jazeera', language: 'English' },
+        { name: 'Amar Bangla', language: 'Bangla' },
+        { name: 'Bangla Tribune', language: 'Bangla' },
+        { name: 'BBC', language: 'English' },
+        { name: 'Dawn', language: 'English' },
+        { name: 'JagoNews24', language: 'Bangla' },
+        { name: 'Prothom Alo', language: 'Bangla' },
+        { name: 'RisingBD', language: 'Bangla' },
+        { name: 'The Business Standard', language: 'English' },
+        { name: 'The Daily Star', language: 'English' },
+        { name: 'The Guardian', language: 'English' },
+        { name: 'The Times of India', language: 'English' }
+    ]
+});
+
 let globalData = [];
 let filteredData = [];
-const itemsPerPage = 20; // Articles rendered per UI chunk
+const itemsPerPage = 24; // Articles rendered per UI chunk
 const serverPageSize = 50; // Rows requested from the Worker on every API load
 let currentDisplayed = itemsPerPage;
 
@@ -30,6 +69,28 @@ let searchDebounce = null;
 let carouselInterval, currentSlide = 0, carouselTotal = 0, touchStartX = null;
 let readArticles = safeParse(localStorage.getItem('readArticles'), []);
 let bookmarks = safeParse(localStorage.getItem('bookmarks'), []);
+
+function normalizeActiveSelections() {
+    const validTopics = new Set(MANUAL_FILTER_OPTIONS.topics);
+    const validSources = new Set(MANUAL_FILTER_OPTIONS.sources.map(source => source.name));
+    const validLanguages = new Set(MANUAL_FILTER_OPTIONS.languages);
+
+    activeCategories = activeCategories.filter(value => value === 'All' || validTopics.has(value));
+    activeSources = activeSources.filter(value => value === 'All' || validSources.has(value));
+    activeLanguages = activeLanguages.filter(value => value === 'All' || validLanguages.has(value));
+
+    const visibleSourceNames = new Set(getSourcesForSelectedLanguages().map(source => source.name));
+    activeSources = activeSources.filter(value => value === 'All' || visibleSourceNames.has(value));
+
+    if (!activeCategories.length) activeCategories = ['All'];
+    if (!activeSources.length) activeSources = ['All'];
+    if (!activeLanguages.length) activeLanguages = ['All'];
+}
+
+function getSourcesForSelectedLanguages() {
+    if (activeLanguages.includes('All')) return MANUAL_FILTER_OPTIONS.sources;
+    return MANUAL_FILTER_OPTIONS.sources.filter(source => activeLanguages.includes(source.language));
+}
 
 function safeParse(str, fallback) { try { const v = JSON.parse(str); return Array.isArray(v) ? v : fallback; } catch (e) { return fallback; } }
 
@@ -200,52 +261,31 @@ window.clearAllFilters = function() {
     showToast("Filters cleared");
 }
 
-function computeContextualTags() {
-    const tags = new Set();
-    globalData.forEach(item => {
-        const itemLang = isBanglaText(item.title) ? 'Bangla' : 'English';
-        if (!activeLanguages.includes('All') && !activeLanguages.includes(itemLang)) return;
-        const src = item.source_name || 'Unknown';
-        if (!activeSources.includes('All') && !activeSources.includes(src)) return;
-        parseTags(item).forEach(t => { if (t && t !== item.source_name) tags.add(t); });
-    });
-    return Array.from(tags).sort();
-}
-
-function computeContextualSources() {
-    const sources = new Set();
-    globalData.forEach(item => {
-        const itemLang = isBanglaText(item.title) ? 'Bangla' : 'English';
-        if (!activeLanguages.includes('All') && !activeLanguages.includes(itemLang)) return;
-        if (!activeCategories.includes('All')) {
-            const itemTags = parseTags(item);
-            if (!activeCategories.some(cat => itemTags.includes(cat))) return;
-        }
-        if (item.source_name) sources.add(item.source_name);
-    });
-    return Array.from(sources).sort();
-}
-
 function setupFilters() {
-    const contextualTags = computeContextualTags();
+    const languageContainer = document.getElementById('lang-filter-container');
+    if (languageContainer) {
+        languageContainer.innerHTML = '<button class="capsule ' + (activeLanguages.includes('All') ? 'active' : '') + '" data-lang="All">Both</button>'
+            + MANUAL_FILTER_OPTIONS.languages.map(language =>
+                '<button class="capsule ' + (activeLanguages.includes(language) ? 'active' : '') + '" data-lang="' + escapeHtml(language) + '">' + escapeHtml(language) + '</button>'
+            ).join('');
+    }
+
     const tagContainer = document.getElementById('filter-container');
     if (tagContainer) {
         tagContainer.innerHTML = '<button class="capsule ' + (activeCategories.includes('All') ? 'active' : '') + '" data-category="All">All topics</button>';
-        contextualTags.forEach(cat => {
-            tagContainer.innerHTML += '<button class="capsule ' + (activeCategories.includes(cat) ? 'active' : '') + '" data-category="' + escapeHtml(cat) + '">' + escapeHtml(cat) + '</button>';
-        });
+        tagContainer.innerHTML += MANUAL_FILTER_OPTIONS.topics.map(topic =>
+            '<button class="capsule ' + (activeCategories.includes(topic) ? 'active' : '') + '" data-category="' + escapeHtml(topic) + '">' + escapeHtml(topic) + '</button>'
+        ).join('');
     }
 
-    const contextualSources = computeContextualSources();
     const sourceContainer = document.getElementById('source-filter-container');
     if (sourceContainer) {
         sourceContainer.innerHTML = '<button class="capsule ' + (activeSources.includes('All') ? 'active' : '') + '" data-source="All">All sources</button>';
-        contextualSources.forEach(src => {
-            sourceContainer.innerHTML += '<button class="capsule ' + (activeSources.includes(src) ? 'active' : '') + '" data-source="' + escapeHtml(src) + '">' + escapeHtml(src) + '</button>';
-        });
+        sourceContainer.innerHTML += getSourcesForSelectedLanguages().map(source =>
+            '<button class="capsule ' + (activeSources.includes(source.name) ? 'active' : '') + '" data-source="' + escapeHtml(source.name) + '">' + escapeHtml(source.name) + '</button>'
+        ).join('');
     }
 
-    document.querySelectorAll('#lang-filter-container .capsule').forEach(btn => btn.classList.toggle('active', activeLanguages.includes(btn.dataset.lang)));
 }
 
 function handleMultiSelect(clickedVal, currentArray, allVal) {
