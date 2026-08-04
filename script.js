@@ -850,5 +850,9 @@ applyView(currentView);
 const cacheHit = loadFromCache();
 fetchArticlesFromWorker({ reason: cacheHit ? 'cache-follow-up' : 'initial', reset: !cacheHit });
 setInterval(() => {
-    if (!document.hidden) fetchArticlesFromWorker({ reason: 'refresh', reset: true });
+    // Never replace the active feed while the reader is deep in the page.
+    // A background reset used to clear the loaded list and move the viewport.
+    if (!document.hidden && window.scrollY < 300) {
+        fetchArticlesFromWorker({ reason: 'refresh', reset: true });
+    }
 }, 3 * 60 * 1000);
