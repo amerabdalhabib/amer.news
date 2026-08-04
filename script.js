@@ -358,7 +358,7 @@ function resetFeedSession() {
     filteredData = [];
     fetchPageNum = 1;
     hasMoreServerData = true;
-    currentDisplayed = itemsPerPage;
+    currentDisplayed = 0;
     feedQueryKey = getFeedQueryKey();
     activeRequestId++;
 }
@@ -386,6 +386,7 @@ function loadFromCache() {
         if (!Array.isArray(data) || data.length === 0) return false;
         globalData = data.filter(item => item && item.url);
         fetchPageNum = Math.max(1, Number(localStorage.getItem(CACHE_PAGE_KEY)) || Math.floor(globalData.length / serverPageSize) + 1);
+        currentDisplayed = Math.min(itemsPerPage, globalData.length);
         feedQueryKey = getFeedQueryKey();
         setupFilters();
         renderTicker(globalData.slice(0, 12));
@@ -435,6 +436,41 @@ window.loadMoreFromApi = async function() {
     await fetchArticlesFromWorker({ reason: 'button' });
 }
 
+function renderArticlesProgressively() {
+    const container = document.getElementById('news-container');
+    if (!container) return;
+    if (filteredData.length === 0) {
+        renderEmptyState();
+        return;
+    }
+
+    const targetCount = filteredData.length;
+
+    // Keep the hero carousel, if enabled, as the first three articles. Once it
+    // exists, append every subsequent article independently instead of waiting
+    // for a 20/24-item render batch.
+    if (currentDisplayed === 0) {
+        if (currentView !== 'text' && targetCount >= 3) {
+            currentDisplayed = 3;
+            renderArticles();
+        } else {
+            container.innerHTML = '';
+        }
+    }
+
+    const appendNext = () => {
+        if (currentDisplayed >= targetCount) {
+            updateLoadMoreButton();
+            return;
+        }
+        const itemIndex = currentDisplayed;
+        container.insertAdjacentHTML('beforeend', buildCardHtml(filteredData[itemIndex], itemIndex));
+        currentDisplayed++;
+        window.requestAnimationFrame(appendNext);
+    };
+    appendNext();
+}
+
 // Every call in this function, including infinite scroll and Load More, goes to the API.
 async function fetchArticlesFromWorker(options = {}) {
     if (typeof options === 'boolean') {
@@ -450,8 +486,6 @@ async function fetchArticlesFromWorker(options = {}) {
     if (!hasMoreServerData && reason !== 'refresh') return false;
 
     const requestId = activeRequestId;
-    const isInitialQueryLoad = reset || ['initial', 'cache-follow-up', 'filter', 'tag', 'search', 'reset', 'queued'].includes(reason);
-    const targetVisibleCount = isInitialQueryLoad ? itemsPerPage : currentDisplayed + itemsPerPage;
     isFetching = true;
     updateSentinelLoader(true);
     updateLoadMoreButton();
@@ -462,9 +496,9 @@ async function fetchArticlesFromWorker(options = {}) {
         let lastPageSize = 0;
         let fetchedAtLeastOnePage = false;
 
-        // A customized query may have fewer than 20 matches in one server page.
-        // Keep asking the API until the visible target is filled or the database ends.
-        while (hasMoreServerData && (!fetchedAtLeastOnePage || filteredData.length < targetVisibleCount)) {
+        // Fetch one server page at a time. Matching articles are progressively
+        // inserted as soon as the page arrives; no 20/24-item target is awaited.
+        while (hasMoreServerData && !fetchedAtLeastOnePage) {
             const params = new URLSearchParams({ page: String(fetchPageNum), size: String(serverPageSize) });
             const searchTerm = getSearchTerm();
             if (searchTerm) params.set('search', searchTerm);
@@ -492,7 +526,6 @@ async function fetchArticlesFromWorker(options = {}) {
             if (!rows.length || (addedCount === 0 && rows.length === serverPageSize)) break;
         }
 
-        currentDisplayed = Math.min(targetVisibleCount, filteredData.length);
         if (isDefaultFeedQuery() && globalData.length > 0) {
             // localStorage is synchronous; write once after the complete API
             // batch rather than blocking the UI after every server page.
@@ -506,7 +539,9 @@ async function fetchArticlesFromWorker(options = {}) {
             const ticker = document.getElementById('ticker-bar');
             if (ticker) ticker.style.display = 'none';
         }
-        applyFiltersAndSort();
+        applyFiltersAndSort(false);
+        renderArticlesProgressively();
+        updateLoadMoreButton();
         setTimeout(positionSegSlider, 50);
         return totalAdded > 0 || lastPageSize > 0;
     } catch (error) {
