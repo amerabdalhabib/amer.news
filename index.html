@@ -12,6 +12,8 @@
     <meta property="og:image" content="https://raw.githubusercontent.com/amerabdalhabib/amer.news/main/images/socialcard.jpg">
     <meta property="og:image:alt" content="Amer.News — Wire Desk">
     <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:url" content="https://news.amerhabib.com/">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Amer.News — Wire Desk">
@@ -99,7 +101,8 @@
             </div>
         </div>
 
-        <div id="news-container" class="layout-grid-4" aria-live="polite"></div>
+        <div id="news-status" class="sr-only" role="status" aria-live="polite"></div>
+        <div id="news-container" class="layout-grid-4"></div>
         <div id="load-more-container" style="text-align:center; padding: 10px 0 30px; display: none;">
             <button id="load-more-btn" class="load-more-btn" onclick="loadMoreFromApi()">
                 <span id="load-more-text">Load more articles</span>
