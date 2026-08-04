@@ -549,11 +549,20 @@ async function fetchArticlesFromWorker(options = {}) {
         let fetchedAtLeastOnePage = false;
 
         // Fetch one server page at a time. Matching articles are progressively
-        // inserted as soon as the page arrives; no 20/24-item target is awaited.
-        while (hasMoreServerData && !fetchedAtLeastOnePage) {
+        // inserted as soon as the page arrives. For customized queries, keep
+        // walking API pages until a match is found because the Worker may not
+        // apply source/topic parameters server-side.
+        while (hasMoreServerData && (!fetchedAtLeastOnePage || (!isDefaultFeedQuery() && filteredData.length === 0))) {
             const params = new URLSearchParams({ page: String(fetchPageNum), size: String(serverPageSize) });
             const searchTerm = getSearchTerm();
             if (searchTerm) params.set('search', searchTerm);
+            else if (!activeSources.includes('All') && activeSources.length === 1) {
+                // The Worker currently ignores `source`, but its search index
+                // includes source_name. Use it to avoid walking many unrelated
+                // pages for a single-source customization; client filtering
+                // below still verifies the exact source.
+                params.set('search', activeSources[0]);
+            }
             // These are useful when supported by the Worker; client-side filtering below remains authoritative.
             if (!activeCategories.includes('All')) params.set('category', activeCategories.join(','));
             if (!activeSources.includes('All')) params.set('source', activeSources.join(','));
