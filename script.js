@@ -59,6 +59,8 @@ let hasMoreServerData = true;  // Whether the current API query has another page
 let feedQueryKey = '';
 let activeRequestId = 0;
 let pendingFeedRequest = false;
+let activeAbortController = null;
+let cacheWriteTimer = null;
 
 let activeCategories = safeParse(localStorage.getItem('newsCategories'), ['All']);
 let activeSources = safeParse(localStorage.getItem('newsSources'), ['All']);
@@ -90,6 +92,21 @@ function normalizeActiveSelections() {
 function getSourcesForSelectedLanguages() {
     if (activeLanguages.includes('All')) return MANUAL_FILTER_OPTIONS.sources;
     return MANUAL_FILTER_OPTIONS.sources.filter(source => activeLanguages.includes(source.language));
+}
+
+function normalizeArticle(raw) {
+    const article = raw || {};
+    const normalizedTags = parseTags(article);
+    const title = article.title || '';
+    const summary = article.summary || '';
+    const source = article.source_name || 'Unknown';
+    return {
+        ...article,
+        normalizedTags,
+        language: isBanglaText(title) ? 'Bangla' : 'English',
+        source,
+        searchText: [title, summary, source, ...normalizedTags].join(' ').toLowerCase()
+    };
 }
 
 function safeParse(str, fallback) { try { const v = JSON.parse(str); return Array.isArray(v) ? v : fallback; } catch (e) { return fallback; } }
@@ -187,6 +204,11 @@ function showToast(m) {
     if (t) { t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
 }
 
+function announceStatus(message) {
+    const status = document.getElementById('news-status');
+    if (status) status.textContent = message;
+}
+
 function getRelativeTime(dateStr) {
     if (!dateStr) return '';
     const d = Math.floor((new Date() - new Date(dateStr)) / 1000);
@@ -262,6 +284,7 @@ window.clearAllFilters = function() {
 }
 
 function setupFilters() {
+    normalizeActiveSelections();
     const languageContainer = document.getElementById('lang-filter-container');
     if (languageContainer) {
         languageContainer.innerHTML = '<button class="capsule ' + (activeLanguages.includes('All') ? 'active' : '') + '" data-lang="All">Both</button>'
@@ -368,11 +391,29 @@ function addArticles(items) {
     let added = 0;
     items.forEach(item => {
         if (!item || !item.url || knownUrls.has(item.url)) return;
-        globalData.push(item);
+        globalData.push(normalizeArticle(item));
         knownUrls.add(item.url);
         added++;
     });
     return added;
+}
+
+function scheduleCacheWrite() {
+    if (!isDefaultFeedQuery() || !globalData.length) return;
+    clearTimeout(cacheWriteTimer);
+    cacheWriteTimer = setTimeout(() => {
+        const write = () => {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(globalData));
+                localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+                localStorage.setItem(CACHE_PAGE_KEY, String(fetchPageNum));
+            } catch (error) {
+                console.warn('Unable to update article cache:', error);
+            }
+        };
+        if ('requestIdleCallback' in window) requestIdleCallback(write, { timeout: 1000 });
+        else write();
+    }, 250);
 }
 
 function loadFromCache() {
@@ -384,7 +425,7 @@ function loadFromCache() {
     try {
         const data = JSON.parse(cachedData);
         if (!Array.isArray(data) || data.length === 0) return false;
-        globalData = data.filter(item => item && item.url);
+        globalData = data.filter(item => item && item.url).map(normalizeArticle);
         fetchPageNum = Math.max(1, Number(localStorage.getItem(CACHE_PAGE_KEY)) || Math.floor(globalData.length / serverPageSize) + 1);
         currentDisplayed = Math.min(itemsPerPage, globalData.length);
         feedQueryKey = getFeedQueryKey();
@@ -460,12 +501,21 @@ function renderArticlesProgressively() {
 
     const appendNext = () => {
         if (currentDisplayed >= targetCount) {
+            announceStatus('Loaded ' + currentDisplayed + ' articles');
             updateLoadMoreButton();
             return;
         }
-        const itemIndex = currentDisplayed;
-        container.insertAdjacentHTML('beforeend', buildCardHtml(filteredData[itemIndex], itemIndex));
-        currentDisplayed++;
+        const fragment = document.createDocumentFragment();
+        const template = document.createElement('template');
+        let addedThisFrame = 0;
+        while (currentDisplayed < targetCount && addedThisFrame < 4) {
+            const itemIndex = currentDisplayed;
+            template.innerHTML = buildCardHtml(filteredData[itemIndex], itemIndex);
+            fragment.appendChild(template.content.firstElementChild);
+            currentDisplayed++;
+            addedThisFrame++;
+        }
+        container.appendChild(fragment);
         window.requestAnimationFrame(appendNext);
     };
     appendNext();
@@ -480,12 +530,14 @@ async function fetchArticlesFromWorker(options = {}) {
     const queryKey = getFeedQueryKey();
     if (reset || queryKey !== feedQueryKey) resetFeedSession();
     if (isFetching) {
+        activeAbortController?.abort();
         pendingFeedRequest = true;
         return false;
     }
     if (!hasMoreServerData && reason !== 'refresh') return false;
 
     const requestId = activeRequestId;
+    activeAbortController = new AbortController();
     isFetching = true;
     updateSentinelLoader(true);
     updateLoadMoreButton();
@@ -507,7 +559,7 @@ async function fetchArticlesFromWorker(options = {}) {
             if (!activeSources.includes('All')) params.set('source', activeSources.join(','));
             if (!activeLanguages.includes('All')) params.set('language', activeLanguages.join(','));
 
-            const response = await fetch(API_WORKER_URL + '?' + params.toString(), { cache: 'no-store' });
+            const response = await fetch(API_WORKER_URL + '?' + params.toString(), { cache: 'no-store', signal: activeAbortController.signal });
             if (!response.ok) throw new Error('API returned HTTP ' + response.status);
             const page = await response.json();
             if (requestId !== activeRequestId) return false;
@@ -526,13 +578,7 @@ async function fetchArticlesFromWorker(options = {}) {
             if (!rows.length || (addedCount === 0 && rows.length === serverPageSize)) break;
         }
 
-        if (isDefaultFeedQuery() && globalData.length > 0) {
-            // localStorage is synchronous; write once after the complete API
-            // batch rather than blocking the UI after every server page.
-            localStorage.setItem(CACHE_KEY, JSON.stringify(globalData));
-            localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-            localStorage.setItem(CACHE_PAGE_KEY, String(fetchPageNum));
-        }
+        scheduleCacheWrite();
         if (globalData.length > 0) {
             renderTicker(globalData.slice(0, 12));
         } else if (!hasMoreServerData) {
@@ -545,10 +591,11 @@ async function fetchArticlesFromWorker(options = {}) {
         setTimeout(positionSegSlider, 50);
         return totalAdded > 0 || lastPageSize > 0;
     } catch (error) {
-        console.error('Worker API Error:', error);
-        if (globalData.length === 0) renderErrorState();
+        if (error.name !== 'AbortError') console.error('Worker API Error:', error);
+        if (error.name !== 'AbortError' && globalData.length === 0) renderErrorState();
         return false;
     } finally {
+        activeAbortController = null;
         isFetching = false;
         updateSentinelLoader(false);
         updateLoadMoreButton();
@@ -569,24 +616,20 @@ function applyFiltersAndSort(render = true) {
     if (sortMode === 'bookmarks') filteredData = filteredData.filter(item => bookmarks.includes(item.url));
 
     if (!activeLanguages.includes('All')) {
-        filteredData = filteredData.filter(item => activeLanguages.includes(isBanglaText(item.title) ? 'Bangla' : 'English'));
+        filteredData = filteredData.filter(item => activeLanguages.includes(item.language || (isBanglaText(item.title) ? 'Bangla' : 'English')));
     }
     if (!activeSources.includes('All')) {
-        filteredData = filteredData.filter(item => activeSources.includes(item.source_name));
+        filteredData = filteredData.filter(item => activeSources.includes(item.source || item.source_name));
     }
     if (!activeCategories.includes('All')) {
         filteredData = filteredData.filter(item => {
-            const tags = parseTags(item);
+            const tags = item.normalizedTags || parseTags(item);
             return activeCategories.some(cat => tags.includes(cat));
         });
     }
     if (searchTerm) {
         filteredData = filteredData.filter(item => {
-            const title = (item.title || '').toLowerCase();
-            const summary = (item.summary || '').toLowerCase();
-            const source = (item.source_name || '').toLowerCase();
-            const tagStr = parseTags(item).map(t => t.toLowerCase()).join(' ');
-            return title.includes(searchTerm) || summary.includes(searchTerm) || source.includes(searchTerm) || tagStr.includes(searchTerm);
+            return (item.searchText || normalizeArticle(item).searchText).includes(searchTerm);
         });
     }
 
@@ -688,7 +731,7 @@ function buildCarouselHtml(items) {
         return '<div class="carousel-slide ' + (index === 0 ? 'active' : '') + '" id="slide-' + index + '">'
             + '<span class="wire-stamp">Top story</span>'
             + '<a href="' + u + '" target="_blank" rel="noopener" data-url="' + u + '" class="hero-full-link" aria-label="' + ti + '"></a>'
-            + '<div class="card-image-wrap">' + (item.image_url ? '<img src="' + escapeHtml(item.image_url) + '" class="news-image" alt="">' : '') + '<div class="hero-overlay"></div></div>'
+            + '<div class="card-image-wrap">' + (item.image_url ? '<img src="' + escapeHtml(item.image_url) + '" class="news-image" alt="" loading="lazy" decoding="async">' : '') + '<div class="hero-overlay"></div></div>'
             + '<div class="news-content"><div class="content-main"><div class="tags-group">' + tagsHtml + '</div>'
             + '<a class="news-title ' + (bn ? 'bn-title' : '') + '" href="' + u + '" target="_blank" rel="noopener" data-url="' + u + '">' + ti + '</a></div>'
             + '<div class="bookmark-wrap"><div style="display:flex; gap:4px;">'
@@ -777,7 +820,7 @@ function buildCardHtml(item, index = 0) {
     const spanClass = (isMasonry && (index % 5 === 0 || index % 7 === 1)) ? 'span-2' : '';
     const noImageCardClass = (!hasImage && isMasonry) ? 'no-image-card' : '';
     const imageHtml = hasImage
-        ? '<a href="' + url + '" target="_blank" rel="noopener" data-url="' + url + '" class="card-image-wrap"><img src="' + escapeHtml(item.image_url) + '" alt="" class="news-image" loading="lazy"></a>'
+        ? '<a href="' + url + '" target="_blank" rel="noopener" data-url="' + url + '" class="card-image-wrap"><img src="' + escapeHtml(item.image_url) + '" alt="" class="news-image" loading="lazy" decoding="async"></a>'
         : (isMasonry ? '' : '<div class="card-image-wrap"><span class="no-image-placeholder">No image</span></div>');
     const allTagsHtml = ['<span class="tag" data-source="' + escapeHtml(sourceTag) + '">' + escapeHtml(sourceTag) + '</span>',
         ...topicTags.map(t => '<span class="tag" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</span>')].join('');
