@@ -35,6 +35,7 @@ const MANUAL_FILTER_OPTIONS = Object.freeze({
         { name: 'JagoNews24', language: 'Bangla' },
         { name: 'Prothom Alo', language: 'Bangla' },
         { name: 'RisingBD', language: 'Bangla' },
+        { name: 'RT', language: 'English' },
         { name: 'The Business Standard', language: 'English' },
         { name: 'The Daily Star', language: 'English' },
         { name: 'The Guardian', language: 'English' },
