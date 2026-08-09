@@ -35,6 +35,7 @@ const MANUAL_FILTER_OPTIONS = Object.freeze({
         { name: 'JagoNews24', language: 'Bangla' },
         { name: 'Prothom Alo', language: 'Bangla' },
         { name: 'RisingBD', language: 'Bangla' },
+        { name: 'RT', language: 'English' },
         { name: 'The Business Standard', language: 'English' },
         { name: 'The Daily Star', language: 'English' },
         { name: 'The Guardian', language: 'English' },
@@ -73,11 +74,12 @@ let readArticles = safeParse(localStorage.getItem('readArticles'), []);
 let bookmarks = safeParse(localStorage.getItem('bookmarks'), []);
 
 function normalizeActiveSelections() {
-    const validTopics = new Set(MANUAL_FILTER_OPTIONS.topics);
     const validSources = new Set(MANUAL_FILTER_OPTIONS.sources.map(source => source.name));
     const validLanguages = new Set(MANUAL_FILTER_OPTIONS.languages);
 
-    activeCategories = activeCategories.filter(value => value === 'All' || validTopics.has(value));
+    // Topics are intentionally disabled in the Customize Feed controls.
+    activeCategories = ['All'];
+    localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
     activeSources = activeSources.filter(value => value === 'All' || validSources.has(value));
     activeLanguages = activeLanguages.filter(value => value === 'All' || validLanguages.has(value));
 
