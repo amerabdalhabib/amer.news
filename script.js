@@ -35,7 +35,6 @@ const MANUAL_FILTER_OPTIONS = Object.freeze({
         { name: 'JagoNews24', language: 'Bangla' },
         { name: 'Prothom Alo', language: 'Bangla' },
         { name: 'RisingBD', language: 'Bangla' },
-        { name: 'RT', language: 'English' },
         { name: 'The Business Standard', language: 'English' },
         { name: 'The Daily Star', language: 'English' },
         { name: 'The Guardian', language: 'English' },
@@ -212,13 +211,24 @@ function announceStatus(message) {
 
 function getRelativeTime(dateStr) {
     if (!dateStr) return '';
-    const d = Math.floor((new Date() - new Date(dateStr)) / 1000);
+    const publishedDate = new Date(dateStr);
+    if (Number.isNaN(publishedDate.getTime())) return '';
+    const d = Math.floor((new Date() - publishedDate) / 1000);
     if (d < 60) return "Just now";
     const m = Math.floor(d / 60);
     if (m < 60) return m + " min ago";
     const h = Math.floor(m / 60);
     if (h < 24) return h + " hr ago";
     const days = Math.floor(h / 24);
+    if (days > 7) {
+        return publishedDate.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    }
     return days === 1 ? "Yesterday" : days + " days ago";
 }
 
@@ -735,10 +745,11 @@ function buildCarouselHtml(items) {
     carouselTotal = items.length; currentSlide = 0;
     const slidesHtml = items.map((item, index) => {
         const bm = bookmarks.includes(item.url), st = item.source_name || 'News';
+        const sourceClass = ['guardian', 'the guardian'].includes(st.trim().toLowerCase()) ? 'source-guardian' : '';
         const tt = parseTags(item).filter(t => t !== st && t !== 'Top News');
         const u = escapeHtml(item.url), ti = escapeHtml(item.title), bn = isBanglaText(item.title);
         const tagsHtml = ['<span class="tag" data-source="' + escapeHtml(st) + '">' + escapeHtml(st) + '</span>', ...tt.map(t => '<span class="tag" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</span>')].join('');
-        return '<div class="carousel-slide ' + (index === 0 ? 'active' : '') + '" id="slide-' + index + '">'
+        return '<div class="carousel-slide ' + sourceClass + ' ' + (index === 0 ? 'active' : '') + '" id="slide-' + index + '">'
             + '<span class="wire-stamp">Top story</span>'
             + '<a href="' + u + '" target="_blank" rel="noopener" data-url="' + u + '" class="hero-full-link" aria-label="' + ti + '"></a>'
             + '<div class="card-image-wrap">' + (item.image_url ? '<img src="' + escapeHtml(item.image_url) + '" class="news-image" alt="" loading="lazy" decoding="async">' : '') + '<div class="hero-overlay"></div></div>'
@@ -824,6 +835,7 @@ function renderTicker(items) {
 function buildCardHtml(item, index = 0) {
     const isRead = readArticles.includes(item.url), isBookmarked = bookmarks.includes(item.url);
     const cardId = hashId(item.url), snippet = item.summary || '', sourceTag = item.source_name || 'News';
+    const sourceClass = ['guardian', 'the guardian'].includes(sourceTag.trim().toLowerCase()) ? 'source-guardian' : '';
     const topicTags = parseTags(item).filter(t => t !== sourceTag && t !== 'Top News');
     const url = escapeHtml(item.url), titleStr = escapeHtml(item.title), isBn = isBanglaText(item.title);
     const hasImage = Boolean(item.image_url), isMasonry = currentView === 'masonry';
@@ -836,7 +848,7 @@ function buildCardHtml(item, index = 0) {
         ...topicTags.map(t => '<span class="tag" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</span>')].join('');
 
     if (!hasImage && isMasonry) {
-        return '<div id="' + cardId + '" class="news-card ' + spanClass + ' ' + noImageCardClass + ' ' + (isRead ? 'read' : '') + '">'
+        return '<div id="' + cardId + '" class="news-card ' + sourceClass + ' ' + spanClass + ' ' + noImageCardClass + ' ' + (isRead ? 'read' : '') + '">'
             + '<div class="news-content"><div class="content-main">'
             + '<div class="card-header"><div class="tags-group">' + allTagsHtml + '</div>'
             + '<div class="card-actions-group">'
@@ -847,7 +859,7 @@ function buildCardHtml(item, index = 0) {
             + '<div class="meta"><span>' + getRelativeTime(item.published_at) + '</span></div></div></div></div>';
     }
 
-    return '<div id="' + cardId + '" class="news-card ' + spanClass + ' ' + (isRead ? 'read' : '') + '">' + imageHtml
+    return '<div id="' + cardId + '" class="news-card ' + sourceClass + ' ' + spanClass + ' ' + (isRead ? 'read' : '') + '">' + imageHtml
         + '<div class="news-content"><div class="content-main">'
         + '<div class="card-header"><div class="tags-group">' + allTagsHtml + '</div>'
         + '<div class="card-actions-group">'
