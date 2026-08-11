@@ -29,6 +29,7 @@ const MANUAL_FILTER_OPTIONS = Object.freeze({
     sources: [
         { name: 'Al Jazeera', language: 'English' },
         { name: 'Amar Bangla', language: 'Bangla' },
+        { name: 'Amar Desh', language: 'Bangla' },
         { name: 'Bangla Tribune', language: 'Bangla' },
         { name: 'BBC', language: 'English' },
         { name: 'Dawn', language: 'English' },
