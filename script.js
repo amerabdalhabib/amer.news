@@ -14,20 +14,9 @@ const API_WORKER_URL = 'https://amernewsapi.amerhabib.workers.dev/';
  */
 const MANUAL_FILTER_OPTIONS = Object.freeze({
     languages: ['English', 'Bangla'],
-    topics: [
-        'Top News',
-        'Bangladesh',
-        'World',
-        'Politics',
-        'Business',
-        'Technology',
-        'Sports',
-        'Entertainment',
-        'Health',
-        'Science'
-    ],
     sources: [
         { name: 'Al Jazeera', language: 'English' },
+        { name: 'Associated Press', language: 'English' },
         { name: 'Amar Bangla', language: 'Bangla' },
         { name: 'Amar Desh', language: 'Bangla' },
         { name: 'Bangla Tribune', language: 'Bangla' },
@@ -67,30 +56,29 @@ let pendingFeedRequest = false;
 let activeAbortController = null;
 let cacheWriteTimer = null;
 
-let activeCategories = safeParse(localStorage.getItem('newsCategories'), ['All']);
 let activeSources = safeParse(localStorage.getItem('newsSources'), ['All']);
 let activeLanguages = safeParse(localStorage.getItem('newsLanguages'), ['All']);
 let currentView = localStorage.getItem('newsView') || (window.innerWidth < 768 ? 'grid-2' : 'grid-4');
-let searchDebounce = null;
 
 let carouselInterval, currentSlide = 0, carouselTotal = 0, touchStartX = null;
 let readArticles = safeParse(localStorage.getItem('readArticles'), []);
 let bookmarks = safeParse(localStorage.getItem('bookmarks'), []);
+let lastSeenTimestamp = Number(localStorage.getItem('lastSeenTimestamp')) || 0;
+let newStoriesCount = 0;
+let commandPaletteDebounce = null;
+let cpActiveIndex = -1;
+let cpVisibleResults = [];
 
 function normalizeActiveSelections() {
     const validSources = new Set(MANUAL_FILTER_OPTIONS.sources.map(source => source.name));
     const validLanguages = new Set(MANUAL_FILTER_OPTIONS.languages);
 
-    // Topics are intentionally disabled in the Customize Feed controls.
-    activeCategories = ['All'];
-    localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
     activeSources = activeSources.filter(value => value === 'All' || validSources.has(value));
     activeLanguages = activeLanguages.filter(value => value === 'All' || validLanguages.has(value));
 
     const visibleSourceNames = new Set(getSourcesForSelectedLanguages().map(source => source.name));
     activeSources = activeSources.filter(value => value === 'All' || visibleSourceNames.has(value));
 
-    if (!activeCategories.length) activeCategories = ['All'];
     if (!activeSources.length) activeSources = ['All'];
     if (!activeLanguages.length) activeLanguages = ['All'];
 }
@@ -156,13 +144,135 @@ window.toggleTheme = function() {
     setupThemeIcon();
 }
 
-window.toggleSearch = function() {
-    const el = document.getElementById('search-container');
-    if (!el) return;
-    const show = el.style.display !== 'block';
-    el.style.display = show ? 'block' : 'none';
-    if (show) { document.getElementById('search-box').focus(); updateSearchClearBtn(); }
+let activeSearchTerm = '';
+let cpRequestId = 0;
+
+/* Command Palette (⌘K search) */
+window.openCommandPalette = function() {
+    const overlay = document.getElementById('command-palette-overlay');
+    const input = document.getElementById('command-palette-input');
+    if (!overlay || !input) return;
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    input.value = activeSearchTerm;
+    input.focus();
+    input.select();
+    renderCommandPaletteResults(activeSearchTerm);
 }
+
+window.closeCommandPalette = function(e) {
+    // Called two ways: (1) as the overlay's onclick, where e.target may be
+    // inside the card (stopPropagation on the card prevents that in practice,
+    // but guard anyway) — only close on a genuine overlay click; (2) invoked
+    // programmatically with no event (Escape, opening a result, etc.), which
+    // should always close.
+    if (e && e.target !== document.getElementById('command-palette-overlay')) return;
+    const overlay = document.getElementById('command-palette-overlay');
+    if (overlay) {
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+}
+
+async function renderCommandPaletteResults(term) {
+    const resultsEl = document.getElementById('command-palette-results');
+    if (!resultsEl) return;
+    cpActiveIndex = -1;
+    const trimmed = term.trim();
+    if (!trimmed) {
+        resultsEl.innerHTML = '<div class="cp-hint">Type to search headlines, sources, or topics</div>';
+        cpVisibleResults = [];
+        return;
+    }
+
+    const requestId = ++cpRequestId;
+    resultsEl.innerHTML = '<div class="cp-hint">Searching...</div>';
+
+    try {
+        const params = new URLSearchParams({ page: '1', size: '8', search: trimmed });
+        const response = await fetch(API_WORKER_URL + '?' + params.toString(), { cache: 'no-store' });
+        if (requestId !== cpRequestId) return; // A newer keystroke superseded this request.
+        if (!response.ok) throw new Error('API returned HTTP ' + response.status);
+        const page = await response.json();
+        const rows = Array.isArray(page) ? page : [];
+        const matches = rows.map(normalizeArticle).slice(0, 8);
+        cpVisibleResults = matches;
+
+        if (!matches.length) {
+            resultsEl.innerHTML = '<div class="cp-empty-state">No matches — press Enter to search the full feed</div>';
+            return;
+        }
+        resultsEl.innerHTML = matches.map((item, i) => {
+            const thumb = item.image_url
+                ? '<img class="cp-result-thumb" src="' + escapeHtml(item.image_url) + '" alt="" loading="lazy">'
+                : '<div class="cp-result-thumb-empty">No img</div>';
+            return '<div class="cp-result" data-index="' + i + '" data-url="' + escapeHtml(item.url) + '">' + thumb
+                + '<div class="cp-result-body"><div class="cp-result-title">' + escapeHtml(item.title) + '</div>'
+                + '<div class="cp-result-meta">' + escapeHtml(item.source_name || item.source || 'News') + ' · ' + getRelativeTime(item.published_at) + '</div></div></div>';
+        }).join('');
+    } catch (error) {
+        if (requestId !== cpRequestId) return;
+        resultsEl.innerHTML = '<div class="cp-empty-state">Search unavailable — press Enter to try the full feed</div>';
+        cpVisibleResults = [];
+    }
+}
+
+function commandPaletteOpenResult(index) {
+    const item = cpVisibleResults[index];
+    if (!item) return;
+    markRead(item.url);
+    window.open(item.url, '_blank', 'noopener');
+    closeCommandPalette();
+}
+
+function runFullSearch(term) {
+    activeSearchTerm = term.trim();
+    fetchArticlesFromWorker({ reason: 'search', reset: true });
+    closeCommandPalette();
+}
+
+const cpInput = document.getElementById('command-palette-input');
+if (cpInput) {
+    cpInput.addEventListener('input', () => {
+        clearTimeout(commandPaletteDebounce);
+        const val = cpInput.value;
+        commandPaletteDebounce = setTimeout(() => renderCommandPaletteResults(val), 200);
+    });
+    cpInput.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeCommandPalette(); return; }
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (cpActiveIndex >= 0 && cpVisibleResults[cpActiveIndex]) commandPaletteOpenResult(cpActiveIndex);
+            else runFullSearch(cpInput.value);
+            return;
+        }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!cpVisibleResults.length) return;
+            const dir = e.key === 'ArrowDown' ? 1 : -1;
+            cpActiveIndex = (cpActiveIndex + dir + cpVisibleResults.length) % cpVisibleResults.length;
+            document.querySelectorAll('.cp-result').forEach((el, i) => el.classList.toggle('active', i === cpActiveIndex));
+            const activeEl = document.querySelector('.cp-result.active');
+            if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+        }
+    });
+}
+
+const cpResultsEl = document.getElementById('command-palette-results');
+if (cpResultsEl) cpResultsEl.addEventListener('click', e => {
+    const row = e.target.closest('.cp-result');
+    if (row) commandPaletteOpenResult(Number(row.dataset.index));
+});
+
+window.addEventListener('keydown', e => {
+    const isCmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k';
+    if (isCmdK) {
+        e.preventDefault();
+        const overlay = document.getElementById('command-palette-overlay');
+        if (overlay && overlay.classList.contains('show')) closeCommandPalette();
+        else openCommandPalette();
+    }
+});
 
 window.toggleModal = function(id) {
     const m = document.getElementById(id);
@@ -174,6 +284,7 @@ if (loginModal) loginModal.addEventListener('click', function(e) { if (e.target 
 window.addEventListener('scroll', () => {
     const b = document.getElementById('back-to-top');
     if (b) b.style.display = window.scrollY > 300 ? 'flex' : 'none';
+    if (window.scrollY < 300 && newStoriesCount > 0) markStoriesSeen();
 }, { passive: true });
 
 /* Slide-In Filter Popover Handlers */
@@ -274,30 +385,17 @@ window.addEventListener('resize', positionSegSlider);
 const layoutSeg = document.getElementById('layout-segmented');
 if (layoutSeg) layoutSeg.addEventListener('click', e => { const b = e.target.closest('.seg-btn'); if (b) applyView(b.dataset.view); });
 
-function updateSearchClearBtn() {
-    const clearBtn = document.getElementById('search-clear-btn');
-    const box = document.getElementById('search-box');
-    if (clearBtn && box) clearBtn.style.display = box.value ? 'flex' : 'none';
-}
-
-window.clearSearch = function() {
-    const box = document.getElementById('search-box');
-    if (box) {
-        box.value = '';
-        updateSearchClearBtn();
-        fetchArticlesFromWorker({ reason: 'search', reset: true });
-        box.focus();
-    }
-}
-
 window.clearAllFilters = function() {
-    activeCategories = ['All']; activeSources = ['All']; activeLanguages = ['All'];
-    localStorage.setItem('newsCategories', JSON.stringify(['All']));
-    localStorage.setItem('newsSources', JSON.stringify(['All']));
-    localStorage.setItem('newsLanguages', JSON.stringify(['All']));
-    setupFilters();
-    fetchArticlesFromWorker({ reason: 'filter', reset: true });
-    showToast("Filters cleared");
+    resetFilters({ reason: 'filter', toast: 'Filters cleared', clearSearchAndSort: false });
+}
+
+function computeSourceCounts() {
+    const counts = {};
+    globalData.forEach(item => {
+        const name = item.source || item.source_name;
+        if (name) counts[name] = (counts[name] || 0) + 1;
+    });
+    return counts;
 }
 
 function setupFilters() {
@@ -306,24 +404,21 @@ function setupFilters() {
     if (languageContainer) {
         languageContainer.innerHTML = '<button class="capsule ' + (activeLanguages.includes('All') ? 'active' : '') + '" data-lang="All">Both</button>'
             + MANUAL_FILTER_OPTIONS.languages.map(language =>
-                '<button class="capsule ' + (activeLanguages.includes(language) ? 'active' : '') + '" data-lang="' + escapeHtml(language) + '">' + escapeHtml(language) + '</button>'
+                '<button class="capsule ' + (activeLanguages.includes(language) ? 'active' : '') + '" data-lang="' + escapeHtml(language) + '">'
+                + '<span class="capsule-lang-dot ' + (language === 'Bangla' ? 'lang-bangla' : '') + '"></span>' + escapeHtml(language) + '</button>'
             ).join('');
-    }
-
-    const tagContainer = document.getElementById('filter-container');
-    if (tagContainer) {
-        tagContainer.innerHTML = '<button class="capsule ' + (activeCategories.includes('All') ? 'active' : '') + '" data-category="All">All topics</button>';
-        tagContainer.innerHTML += MANUAL_FILTER_OPTIONS.topics.map(topic =>
-            '<button class="capsule ' + (activeCategories.includes(topic) ? 'active' : '') + '" data-category="' + escapeHtml(topic) + '">' + escapeHtml(topic) + '</button>'
-        ).join('');
     }
 
     const sourceContainer = document.getElementById('source-filter-container');
     if (sourceContainer) {
+        const counts = computeSourceCounts();
         sourceContainer.innerHTML = '<button class="capsule ' + (activeSources.includes('All') ? 'active' : '') + '" data-source="All">All sources</button>';
-        sourceContainer.innerHTML += getSourcesForSelectedLanguages().map(source =>
-            '<button class="capsule ' + (activeSources.includes(source.name) ? 'active' : '') + '" data-source="' + escapeHtml(source.name) + '">' + escapeHtml(source.name) + '</button>'
-        ).join('');
+        sourceContainer.innerHTML += getSourcesForSelectedLanguages().map(source => {
+            const count = counts[source.name];
+            const countHtml = count ? '<span class="capsule-count">' + count + '</span>' : '';
+            return '<button class="capsule ' + (activeSources.includes(source.name) ? 'active' : '') + '" data-source="' + escapeHtml(source.name) + '">'
+                + escapeHtml(source.name) + countHtml + '</button>';
+        }).join('');
     }
 
 }
@@ -335,15 +430,6 @@ function handleMultiSelect(clickedVal, currentArray, allVal) {
     else next.push(clickedVal);
     return next.length === 0 ? [allVal] : next;
 }
-
-const filterCont = document.getElementById('filter-container');
-if (filterCont) filterCont.addEventListener('click', e => {
-    const btn = e.target.closest('.capsule'); if (!btn) return;
-    activeCategories = handleMultiSelect(btn.dataset.category, activeCategories, 'All');
-    localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
-    setupFilters();
-    fetchArticlesFromWorker({ reason: 'filter', reset: true });
-});
 
 const sourceCont = document.getElementById('source-filter-container');
 if (sourceCont) sourceCont.addEventListener('click', e => {
@@ -363,34 +449,23 @@ if (langCont) langCont.addEventListener('click', e => {
     fetchArticlesFromWorker({ reason: 'filter', reset: true });
 });
 
-const searchBox = document.getElementById('search-box');
-if (searchBox) searchBox.addEventListener('input', () => {
-    updateSearchClearBtn();
-    clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(() => {
-        fetchArticlesFromWorker({ reason: 'search', reset: true });
-    }, 350);
-});
-
 const sortBox = document.getElementById('sort-box');
 if (sortBox) sortBox.addEventListener('change', applyFiltersAndSort);
 
 function getSearchTerm() {
-    const box = document.getElementById('search-box');
-    return box ? box.value.trim() : '';
+    return activeSearchTerm;
 }
 
 function getFeedQueryKey() {
     return JSON.stringify({
         search: getSearchTerm().toLowerCase(),
-        categories: [...activeCategories].sort(),
         sources: [...activeSources].sort(),
         languages: [...activeLanguages].sort()
     });
 }
 
 function isDefaultFeedQuery() {
-    return !getSearchTerm() && activeCategories.includes('All') && activeSources.includes('All') && activeLanguages.includes('All');
+    return !getSearchTerm() && activeSources.includes('All') && activeLanguages.includes('All');
 }
 
 function resetFeedSession() {
@@ -469,12 +544,25 @@ function updateSentinelLoader(show) {
     sentinel.setAttribute('aria-busy', show ? 'true' : 'false');
 }
 
+function isBookmarksView() {
+    const sortEl = document.getElementById('sort-box');
+    return sortEl ? sortEl.value === 'bookmarks' : false;
+}
+
 function updateLoadMoreButton() {
     const container = document.getElementById('load-more-container');
     const btn = document.getElementById('load-more-btn');
     const text = document.getElementById('load-more-text');
     const spinner = document.getElementById('load-more-spinner');
     if (!container) return;
+
+    // Bookmarks view is a client-side filter over what's already loaded.
+    // Fetching more server pages won't reveal additional bookmarked items in
+    // any way the user can see, so hide the control entirely in this view.
+    if (isBookmarksView()) {
+        container.style.display = 'none';
+        return;
+    }
 
     const showButton = hasMoreServerData && globalData.length > 0;
     if (showButton || isFetching) {
@@ -580,8 +668,7 @@ async function fetchArticlesFromWorker(options = {}) {
                 // below still verifies the exact source.
                 params.set('search', activeSources[0]);
             }
-            // These are useful when supported by the Worker; client-side filtering below remains authoritative.
-            if (!activeCategories.includes('All')) params.set('category', activeCategories.join(','));
+            // Useful when supported by the Worker; client-side filtering below remains authoritative.
             if (!activeSources.includes('All')) params.set('source', activeSources.join(','));
             if (!activeLanguages.includes('All')) params.set('language', activeLanguages.join(','));
 
@@ -615,6 +702,9 @@ async function fetchArticlesFromWorker(options = {}) {
         renderArticlesProgressively();
         updateLoadMoreButton();
         setTimeout(positionSegSlider, 50);
+        if (reason === 'refresh' || reason === 'initial' || reason === 'cache-follow-up') {
+            if (window.scrollY < 300) markStoriesSeen();
+        }
         return totalAdded > 0 || lastPageSize > 0;
     } catch (error) {
         if (error.name !== 'AbortError') console.error('Worker API Error:', error);
@@ -635,8 +725,7 @@ async function fetchArticlesFromWorker(options = {}) {
 function applyFiltersAndSort(render = true) {
     const sortEl = document.getElementById('sort-box');
     const sortMode = sortEl ? sortEl.value : 'newest';
-    const searchEl = document.getElementById('search-box');
-    const searchTerm = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    const searchTerm = activeSearchTerm.trim().toLowerCase();
     filteredData = [...globalData];
 
     if (sortMode === 'bookmarks') filteredData = filteredData.filter(item => bookmarks.includes(item.url));
@@ -646,12 +735,6 @@ function applyFiltersAndSort(render = true) {
     }
     if (!activeSources.includes('All')) {
         filteredData = filteredData.filter(item => activeSources.includes(item.source || item.source_name));
-    }
-    if (!activeCategories.includes('All')) {
-        filteredData = filteredData.filter(item => {
-            const tags = item.normalizedTags || parseTags(item);
-            return activeCategories.some(cat => tags.includes(cat));
-        });
     }
     if (searchTerm) {
         filteredData = filteredData.filter(item => {
@@ -671,17 +754,13 @@ function applyFiltersAndSort(render = true) {
 
 // True Infinite Scroll Trigger: Expands local items or pulls fresh pages from Baserow
 function infiniteScrollTrigger() {
-    if (isFetching) return;
+    if (isFetching || isBookmarksView()) return;
     if (hasMoreServerData) fetchArticlesFromWorker({ reason: 'infinite' });
 }
 
 window.filterByTag = function(tag) {
-    if (!activeCategories.includes(tag)) {
-        activeCategories = [tag];
-        localStorage.setItem('newsCategories', JSON.stringify(activeCategories));
-        setupFilters();
-        fetchArticlesFromWorker({ reason: 'tag', reset: true });
-    }
+    activeSearchTerm = tag;
+    fetchArticlesFromWorker({ reason: 'tag', reset: true });
     window.scrollTo({ top: 400, behavior: 'smooth' });
 }
 
@@ -746,6 +825,60 @@ if (newsCont) newsCont.addEventListener('click', e => {
     const ln = e.target.closest('a[data-url]');
     if (ln) markRead(ln.dataset.url);
 });
+
+/* Swipe-to-remove: mobile-only, bookmarks view only. Swiping a card left
+   past a threshold removes it from bookmarks with a brief settle animation,
+   mirroring common mobile list patterns without adding a visible delete button. */
+(function setupSwipeToRemove() {
+    if (!newsCont) return;
+    const SWIPE_THRESHOLD = 90;
+    let activeCard = null, startX = null, startY = null, currentDX = 0, isHorizontal = null;
+
+    newsCont.addEventListener('touchstart', e => {
+        if (!isBookmarksView() || window.innerWidth >= 768) return;
+        const card = e.target.closest('.news-card');
+        if (!card || e.target.closest('.bookmark-btn, .share-btn, a')) return;
+        activeCard = card;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentDX = 0;
+        isHorizontal = null;
+        card.classList.add('swiping');
+    }, { passive: true });
+
+    newsCont.addEventListener('touchmove', e => {
+        if (!activeCard || startX === null) return;
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (isHorizontal === null) isHorizontal = Math.abs(dx) > Math.abs(dy);
+        if (!isHorizontal) return;
+        currentDX = Math.min(0, dx);
+        activeCard.style.transform = 'translateX(' + currentDX + 'px)';
+        activeCard.style.opacity = String(1 - Math.min(0.6, Math.abs(currentDX) / 300));
+    }, { passive: true });
+
+    newsCont.addEventListener('touchend', () => {
+        if (!activeCard) return;
+        const card = activeCard;
+        card.classList.remove('swiping');
+        if (isHorizontal && currentDX < -SWIPE_THRESHOLD) {
+            const url = card.querySelector('.bookmark-btn')?.dataset.url;
+            card.classList.add('swipe-removing');
+            card.style.transform = 'translateX(-110%)';
+            card.style.opacity = '0';
+            card.style.maxHeight = card.offsetHeight + 'px';
+            requestAnimationFrame(() => { card.style.maxHeight = '0px'; });
+            setTimeout(() => { if (url) toggleBookmark(url); }, 320);
+        } else {
+            card.classList.add('swipe-settling');
+            card.style.transform = '';
+            card.style.opacity = '';
+            setTimeout(() => card.classList.remove('swipe-settling'), 200);
+        }
+        activeCard = null; startX = null; startY = null; currentDX = 0; isHorizontal = null;
+    }, { passive: true });
+})();
+
 
 function buildCarouselHtml(items) {
     carouselTotal = items.length; currentSlide = 0;
@@ -896,18 +1029,23 @@ function renderErrorState() {
     if (container) container.innerHTML = '<div class="state-panel"><div class="state-title">Couldn\'t load the feed</div><div class="state-body">The connection to the news source failed. Check your connection and try again.</div><button class="state-action" onclick="fetchArticlesFromWorker({reset:true})">Retry</button></div>';
 }
 
-window.resetFilters = function() {
-    activeCategories = ['All']; activeSources = ['All']; activeLanguages = ['All'];
-    localStorage.setItem('newsCategories', JSON.stringify(['All']));
+// Single shared reset used by both the "Clear filters" empty-state action and
+// the "Clear all filters" button in the Customize Feed popover. Pass
+// clearSearchAndSort: true to also reset the search term and sort mode
+// (used by the empty-state reset, which implies the user wants a clean slate).
+window.resetFilters = function(options = {}) {
+    const { reason = 'reset', toast = null, clearSearchAndSort = true } = options;
+    activeSources = ['All']; activeLanguages = ['All'];
     localStorage.setItem('newsSources', JSON.stringify(['All']));
     localStorage.setItem('newsLanguages', JSON.stringify(['All']));
-    const box = document.getElementById('search-box');
-    if (box) box.value = '';
-    const sortBox = document.getElementById('sort-box');
-    if (sortBox) sortBox.value = 'newest';
-    updateSearchClearBtn();
+    if (clearSearchAndSort) {
+        activeSearchTerm = '';
+        const sortBox = document.getElementById('sort-box');
+        if (sortBox) sortBox.value = 'newest';
+    }
     setupFilters();
-    fetchArticlesFromWorker({ reason: 'reset', reset: true });
+    fetchArticlesFromWorker({ reason, reset: true });
+    if (toast) showToast(toast);
 }
 
 function renderArticles() {
@@ -954,11 +1092,84 @@ if (sentinel) scrollObserver.observe(sentinel);
 /* Initialize App */
 applyView(currentView);
 const cacheHit = loadFromCache();
-fetchArticlesFromWorker({ reason: cacheHit ? 'cache-follow-up' : 'initial', reset: !cacheHit });
+fetchArticlesFromWorker({ reason: cacheHit ? 'cache-follow-up' : 'initial', reset: !cacheHit }).then(() => {
+    if (!lastSeenTimestamp) markStoriesSeen();
+});
 setInterval(() => {
     // Never replace the active feed while the reader is deep in the page.
     // A background reset used to clear the loaded list and move the viewport.
     if (!document.hidden && window.scrollY < 300) {
         fetchArticlesFromWorker({ reason: 'refresh', reset: true });
+    } else if (!document.hidden) {
+        // Reader is scrolled down: don't touch the DOM, but still check for
+        // new stories in the background so the "new stories" bar can appear
+        // when they scroll back up.
+        checkForNewStoriesQuietly();
     }
 }, 3 * 60 * 1000);
+
+function newestTimestamp(list) {
+    let newest = 0;
+    list.forEach(item => {
+        const t = new Date(item.published_at || 0).getTime();
+        if (!Number.isNaN(t) && t > newest) newest = t;
+    });
+    return newest;
+}
+
+function markStoriesSeen() {
+    lastSeenTimestamp = newestTimestamp(globalData) || Date.now();
+    localStorage.setItem('lastSeenTimestamp', String(lastSeenTimestamp));
+    newStoriesCount = 0;
+    const bar = document.getElementById('new-stories-bar');
+    if (bar) bar.style.display = 'none';
+}
+
+function updateNewStoriesBar() {
+    if (!isDefaultFeedQuery() || window.scrollY < 300) {
+        // Reader is already at the top viewing the default feed — the new
+        // content is already visible, so just mark it seen instead of
+        // showing a bar that would only duplicate what's on screen.
+        markStoriesSeen();
+        return;
+    }
+    newStoriesCount = globalData.filter(item => new Date(item.published_at || 0).getTime() > lastSeenTimestamp).length;
+    const bar = document.getElementById('new-stories-bar');
+    const text = document.getElementById('new-stories-text');
+    if (!bar || !text) return;
+    if (newStoriesCount > 0) {
+        text.textContent = newStoriesCount === 1 ? 'New story' : newStoriesCount + ' new stories';
+        bar.style.display = 'flex';
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+async function checkForNewStoriesQuietly() {
+    if (isFetching || !isDefaultFeedQuery()) return;
+    try {
+        const params = new URLSearchParams({ page: '1', size: String(serverPageSize) });
+        const response = await fetch(API_WORKER_URL + '?' + params.toString(), { cache: 'no-store' });
+        if (!response.ok) return;
+        const page = await response.json();
+        const rows = Array.isArray(page) ? page : [];
+        const newest = newestTimestamp(rows.map(normalizeArticle));
+        if (newest > lastSeenTimestamp) {
+            newStoriesCount = rows.filter(item => new Date(item.published_at || 0).getTime() > lastSeenTimestamp).length;
+            const bar = document.getElementById('new-stories-bar');
+            const text = document.getElementById('new-stories-text');
+            if (bar && text && newStoriesCount > 0) {
+                text.textContent = newStoriesCount === 1 ? 'New story' : newStoriesCount + ' new stories';
+                bar.style.display = 'flex';
+            }
+        }
+    } catch (error) {
+        // Silent: this is a background courtesy check, not a user-facing fetch.
+    }
+}
+
+window.jumpToNewStories = function() {
+    markStoriesSeen();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    fetchArticlesFromWorker({ reason: 'refresh', reset: true });
+}
