@@ -55,7 +55,7 @@
                     </a>
                     <div class="utility-zone">
                         <div id="live-datetime" class="live-clock"></div>
-                        <button class="icon-btn" onclick="toggleSearch()" title="Search" aria-label="Search articles">
+                        <button class="icon-btn" onclick="openCommandPalette()" title="Search (⌘K)" aria-label="Search articles">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </button>
                         <button class="icon-btn" onclick="fetchArticlesFromWorker({reason: 'refresh', reset: true})" title="Refresh feed" aria-label="Refresh feed">
@@ -64,21 +64,29 @@
                         <button id="theme-btn" class="icon-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark mode"></button>
                     </div>
                 </div>
-                <div id="search-container">
-                    <div class="search-wrapper">
-                        <input type="text" id="search-box" class="search-box" placeholder="Search..." aria-label="Search articles">
-                        <button id="search-clear-btn" class="search-clear" onclick="clearSearch()" title="Clear search" aria-label="Clear search">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                    </div>
-                </div>
             </header>
+            <div id="new-stories-bar" class="new-stories-bar" style="display:none;" onclick="jumpToNewStories()">
+                <span class="new-stories-dot"></span>
+                <span id="new-stories-text">New stories</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+            </div>
             <div id="ticker-bar" class="ticker-bar" style="display:none;">
                 <div class="ticker-live"><span class="ticker-dot"></span>Live</div>
                 <div class="ticker-viewport">
                     <div id="ticker-track" class="ticker-track"></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="command-palette-overlay" class="command-palette-overlay" onclick="closeCommandPalette(event)">
+        <div class="command-palette-card" onclick="event.stopPropagation()">
+            <div class="command-palette-input-row">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="command-palette-icon"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" id="command-palette-input" class="command-palette-input" placeholder="Search headlines, sources, topics..." aria-label="Search articles" autocomplete="off">
+                <kbd class="command-palette-esc">ESC</kbd>
+            </div>
+            <div id="command-palette-results" class="command-palette-results"></div>
         </div>
     </div>
 
